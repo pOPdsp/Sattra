@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centro de Estética Avanzada</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- NAVEGACIÓN -->
+  <nav class="navbar">
+    <div class="nav-logo">Belleza & Bienestar</div>
+    <ul class="nav-links">
+      <li><a href="#inicio">Inicio</a></li>
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#citas">Reservar</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <div class="hero-content">
+      <p class="hero-subtitle">CENTRO DE ESTÉTICA AVANZADA</p>
+      <h1>Belleza & Bienestar</h1>
+      <div class="divider"></div>
+      <p class="hero-text">Tecnología de vanguardia · Resultados reales · Tu mejor versión</p>
+      <a href="#citas" class="btn-hero">Reserva tu Cita</a>
+    </div>
+  </section>
+
+  <!-- SERVICIOS -->
+  <section class="servicios" id="servicios">
+    <div class="container">
+      <p class="section-label">Lo que ofrecemos</p>
+      <h2 class="section-title">Nuestros Servicios</h2>
+      <div class="divider centered"></div>
+      <div class="services-grid">
+
+        <div class="service-card">
+          <div class="service-icon">✦</div>
+          <h3>Depilación Permanente</h3>
+          <p>Elimina el vello de forma definitiva con tecnología láser de última generación.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◈</div>
+          <h3>Hidrafacial</h3>
+          <p>Tratamiento facial y corporal profundo con hidratación intensiva y limpieza avanzada.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◉</div>
+          <h3>Láser Antiedad</h3>
+          <p>Rejuvenecimiento cutáneo con láser para reducir arrugas y manchas de forma efectiva.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◎</div>
+          <h3>Microagujas</h3>
+          <p>Estimulación natural del colágeno para una piel firme, lisa y radiante.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">✧</div>
+          <h3>Hollywood Peel</h3>
+          <p>El tratamiento favorito de las celebridades. Piel luminosa en una sola sesión.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◐</div>
+          <h3>Radiofrecuencia Tripolar</h3>
+          <p>Reafirma y modela el cuerpo con energía de radiofrecuencia de triple acción.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◑</div>
+          <h3>Cromoterapia</h3>
+          <p>Terapia de luz y color para equilibrar el cuerpo, la mente y las emociones.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◒</div>
+          <h3>Lipolaser</h3>
+          <p>Reducción localizada de grasa con tecnología láser no invasiva y sin dolor.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◓</div>
+          <h3>Gimnasia Pasiva</h3>
+          <p>Tonificación muscular mediante electroestimulación sin esfuerzo físico.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◔</div>
+          <h3>Mesoterapia</h3>
+          <p>Microinyecciones con vitaminas y activos para rejuvenecer piel y reducir grasa.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">◕</div>
+          <h3>Sueroterapia</h3>
+          <p>Sueros vitamínicos personalizados para revitalizar el organismo desde adentro.</p>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">✦</div>
+          <h3>Limpieza Facial</h3>
+          <p>Higienización profunda del rostro para eliminar impurezas y lucir piel fresca.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- RESERVA DE CITAS -->
+  <section class="citas" id="citas">
+    <div class="container">
+      <p class="section-label">Agenda tu visita</p>
+      <h2 class="section-title">Reserva tu Cita</h2>
+      <div class="divider centered"></div>
+
+      <form class="booking-form" id="bookingForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombre">Nombre completo</label>
+            <input type="text" id="nombre" placeholder="Tu nombre" required />
+          </div>
+          <div class="form-group">
+            <label for="telefono">Teléfono / WhatsApp</label>
+            <input type="tel" id="telefono" placeholder="+506 0000-0000" required />
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" placeholder="correo@ejemplo.com" />
+        </div>
+
+        <div class="form-group full">
+          <label for="servicio">Servicio</label>
+          <select id="servicio" required>
+            <option value="">Selecciona un servicio...</option>
+            <option>Depilación Permanente</option>
+            <option>Hidrafacial Facial</option>
+            <option>Hidrafacial Corporal</option>
+            <option>Láser Antiedad</option>
+            <option>Microagujas</option>
+            <option>Hollywood Peel</option>
+            <option>Radiofrecuencia Tripolar</option>
+            <option>Cromoterapia</option>
+            <option>Lipolaser</option>
+            <option>Gimnasia Pasiva</option>
+            <option>Mesoterapia</option>
+            <option>Sueroterapia</option>
+            <option>Limpieza Facial</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" required />
+          </div>
+          <div class="form-group">
+            <label for="hora">Hora</label>
+            <select id="hora" required>
+              <option value="">Selecciona la hora...</option>
+              <option>09:00</option><option>09:30</option>
+              <option>10:00</option><option>10:30</option>
+              <option>11:00</option><option>11:30</option>
+              <option>12:00</option><option>14:00</option>
+              <option>14:30</option><option>15:00</option>
+              <option>15:30</option><option>16:00</option>
+              <option>16:30</option><option>17:00</option>
+              <option>17:30</option><option>18:00</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label for="notas">Notas adicionales (opcional)</label>
+          <textarea id="notas" rows="3" placeholder="¿Tienes alguna consulta o indicación especial?"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Confirmar Cita</button>
+      </form>
+
+      <div class="confirm-msg" id="confirmMsg">
+        ¡Cita reservada con éxito! Te contactaremos pronto para confirmar tu horario.
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section class="contacto" id="contacto">
+    <div class="container">
+      <p class="section-label">Encuéntranos</p>
+      <h2 class="section-title">Contacto</h2>
+      <div class="divider centered"></div>
+      <div class="contact-grid">
+        <div class="contact-item">
+          <p class="contact-label">Dirección</p>
+          <p>Tu dirección aquí, Ciudad</p>
+        </div>
+        <div class="contact-item">
+          <p class="contact-label">Teléfono / WhatsApp</p>
+          <p>+506 0000-0000</p>
+        </div>
+        <div class="contact-item">
+          <p class="contact-label">Horario</p>
+          <p>Lun – Sáb: 9:00 am – 6:00 pm</p>
+        </div>
+        <div class="contact-item">
+          <p class="contact-label">Instagram</p>
+          <p>@tunombre_estetica</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>© 2025 Belleza & Bienestar · Todos los derechos reservados</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
