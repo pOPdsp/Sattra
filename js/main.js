@@ -1,29 +1,11 @@
 // ══════════════════════════════════════════
-//  CONSTANTES
+//  CONFIGURACIÓN — PON TU URL AQUÍ
 // ══════════════════════════════════════════
-const CITAS_KEY = 'sattra_citas';
+const API_URL = 'https://script.google.com/macros/s/AKfycby1oymWGkzFVT7ar5NBE8m6koMzFWpV9Pz3o_qGFnXNpMLpLFoUA2dMA7sbqrDDoUvK/exec';
 
 // ══════════════════════════════════════════
 //  UTILIDADES
 // ══════════════════════════════════════════
-function getCitas() {
-  try {
-    return JSON.parse(localStorage.getItem(CITAS_KEY) || '[]');
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveCitas(citas) {
-  try {
-    localStorage.setItem(CITAS_KEY, JSON.stringify(citas));
-    return true;
-  } catch (e) {
-    console.error('Error guardando cita:', e);
-    return false;
-  }
-}
-
 function generarId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
@@ -33,8 +15,7 @@ function generarId() {
 // ══════════════════════════════════════════
 const fechaInput = document.getElementById('fecha');
 if (fechaInput) {
-  const hoy = new Date().toISOString().split('T')[0];
-  fechaInput.setAttribute('min', hoy);
+  fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
 }
 
 // ══════════════════════════════════════════
@@ -42,9 +23,10 @@ if (fechaInput) {
 // ══════════════════════════════════════════
 const form       = document.getElementById('bookingForm');
 const confirmMsg = document.getElementById('confirmMsg');
+const btnSubmit  = document.querySelector('.btn-submit');
 
 if (form) {
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const nombre   = (document.getElementById('nombre')?.value   || '').trim();
@@ -55,66 +37,49 @@ if (form) {
     const hora     = document.getElementById('hora')?.value      || '';
     const notas    = (document.getElementById('notas')?.value    || '').trim();
 
-    // Validaciones
-    if (!nombre || !servicio || !fecha || !hora || !telefono) {
-      alert('Por favor completa todos los campos obligatorios (nombre, teléfono, servicio, fecha y hora).');
+    if (!nombre || !telefono || !servicio || !fecha || !hora) {
+      alert('Por favor completa todos los campos obligatorios.');
       return;
     }
 
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const fechaElegida = new Date(fecha + 'T00:00:00');
-    if (fechaElegida < hoy) {
-      alert('Por favor selecciona una fecha válida (hoy o posterior).');
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    if (new Date(fecha + 'T00:00:00') < hoy) {
+      alert('Por favor selecciona una fecha válida.');
       return;
     }
 
-    // Crear objeto cita
+    // Estado de carga
+    if (btnSubmit) { btnSubmit.textContent = 'Enviando...'; btnSubmit.disabled = true; }
+
     const nuevaCita = {
-      id:        generarId(),
-      nombre:    nombre,
-      telefono:  telefono,
-      email:     email,
-      servicio:  servicio,
-      fecha:     fecha,
-      hora:      hora,
-      notas:     notas,
-      estado:    'pendiente',
-      creadaEn:  new Date().toISOString()
+      action:   'crearCita',
+      id:       generarId(),
+      nombre, telefono, email, servicio, fecha, hora, notas
     };
 
-    // Guardar
-    const citas = getCitas();
-    citas.push(nuevaCita);
-    const guardado = saveCitas(citas);
+    try {
+      const res = await fetch(API_URL, {
+        method:  'POST',
+        body:    JSON.stringify(nuevaCita)
+      });
+      const data = await res.json();
 
-    if (!guardado) {
-      alert('Hubo un error al guardar la cita. Intenta nuevamente.');
-      return;
-    }
-
-    // Verificar que se guardó correctamente
-    const verificacion = getCitas();
-    const guardadaOk = verificacion.find(c => c.id === nuevaCita.id);
-
-    if (!guardadaOk) {
-      alert('Error al verificar la cita guardada. Contáctanos directamente al 8672-7070.');
-      return;
-    }
-
-    console.log('✅ Cita guardada:', nuevaCita);
-    console.log('📋 Total citas en storage:', verificacion.length);
-
-    // Mostrar confirmación
-    if (confirmMsg) {
-      confirmMsg.style.display = 'block';
-      confirmMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => { confirmMsg.style.display = 'none'; }, 8000);
-    }
-
-    form.reset();
-    if (fechaInput) {
-      fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+      if (data.ok) {
+        if (confirmMsg) {
+          confirmMsg.style.display = 'block';
+          confirmMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => { confirmMsg.style.display = 'none'; }, 8000);
+        }
+        form.reset();
+        if (fechaInput) fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+      } else {
+        alert('Error al guardar la cita: ' + (data.mensaje || 'Intenta nuevamente'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión. Verifica tu internet e intenta nuevamente.');
+    } finally {
+      if (btnSubmit) { btnSubmit.textContent = 'Confirmar Cita'; btnSubmit.disabled = false; }
     }
   });
 }
@@ -124,15 +89,9 @@ if (form) {
 // ══════════════════════════════════════════
 const hamburger = document.getElementById('hamburger');
 const navLinks  = document.getElementById('navLinks');
-
 if (hamburger && navLinks) {
-  hamburger.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-  });
+  hamburger.addEventListener('click', () => navLinks.classList.toggle('active'));
 }
-
 document.querySelectorAll('.nav-links a').forEach(link => {
-  link.addEventListener('click', () => {
-    if (navLinks) navLinks.classList.remove('active');
-  });
+  link.addEventListener('click', () => { if (navLinks) navLinks.classList.remove('active'); });
 });

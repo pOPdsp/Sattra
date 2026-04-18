@@ -487,12 +487,11 @@
 // ══════════════════════════════════════════
 //  CONFIGURACIÓN
 // ══════════════════════════════════════════
+const API_URL    = 'https://script.google.com/macros/s/AKfycby1oymWGkzFVT7ar5NBE8m6koMzFWpV9Pz3o_qGFnXNpMLpLFoUA2dMA7sbqrDDoUvK/exec';
 const PASS_KEY   = 'sattra_admin_pass';
-const CITAS_KEY  = 'sattra_citas';
 const DIAS_KEY   = 'sattra_dias_bloqueados';
 const HORAS_KEY  = 'sattra_horas_bloqueadas';
 const CONF_KEY   = 'sattra_config';
-
 const DEFAULT_PASS = 'Sattra2025';
 
 const SERVICIOS = [
@@ -512,8 +511,26 @@ for (let h = 8; h <= 20; h++) {
 //  HELPERS STORAGE
 // ══════════════════════════════════════════
 const getPass   = ()      => localStorage.getItem(PASS_KEY)   || DEFAULT_PASS;
-const getCitas  = ()      => JSON.parse(localStorage.getItem(CITAS_KEY)  || '[]');
-const saveCitas = (c)     => localStorage.setItem(CITAS_KEY, JSON.stringify(c));
+async function getCitasAPI() {
+  try {
+    const res  = await fetch(API_URL);
+    const data = await res.json();
+    return data.ok ? data.citas : [];
+  } catch (e) {
+    console.error('Error cargando citas:', e);
+    return [];
+  }
+}
+
+async function actualizarCitaAPI(cita) {
+  const res  = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'actualizarCita', ...cita }) });
+  return await res.json();
+}
+
+async function borrarCitaAPI(id) {
+  const res  = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'borrarCita', id }) });
+  return await res.json();
+}
 const getDiasBloq = ()    => JSON.parse(localStorage.getItem(DIAS_KEY)   || '[]');
 const saveDiasBloq= (d)   => localStorage.setItem(DIAS_KEY, JSON.stringify(d));
 const getHorasBloq= ()    => JSON.parse(localStorage.getItem(HORAS_KEY)  || '[]');
@@ -580,11 +597,11 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 }
 
-// ══════════════════════════════════════════
-//  RENDER CITAS
-// ══════════════════════════════════════════
-function renderCitas() {
-  let citas = getCitas();
+async function renderCitas() {
+  document.getElementById('citasBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gris);">Cargando citas...</td></tr>';
+
+  let citas = await getCitasAPI();
+
   const fn = document.getElementById('filterNombre').value.toLowerCase();
   const ff = document.getElementById('filterFecha').value;
   const fe = document.getElementById('filterEstado').value;
@@ -623,7 +640,17 @@ function renderCitas() {
       body.appendChild(tr);
     });
   }
-  actualizarStats();
+  actualizarStatsDesde(citas);
+}
+
+function actualizarStatsDesde(citas) {
+  const hoy  = new Date().toISOString().split('T')[0];
+  const ini  = new Date(); ini.setDate(ini.getDate() - ini.getDay());
+  const fin  = new Date(ini); fin.setDate(fin.getDate() + 6);
+  document.getElementById('statTotal').textContent      = citas.length;
+  document.getElementById('statHoy').textContent        = citas.filter(c => c.fecha === hoy).length;
+  document.getElementById('statSemana').textContent     = citas.filter(c => c.fecha >= ini.toISOString().split('T')[0] && c.fecha <= fin.toISOString().split('T')[0]).length;
+  document.getElementById('statPendientes').textContent = citas.filter(c => c.estado === 'pendiente').length;
 }
 
 function formatFecha(f) {
@@ -666,21 +693,20 @@ function abrirEditar(id) {
   document.getElementById('modalEditar').classList.add('open');
 }
 
-function guardarEdicion() {
-  const citas = getCitas();
-  const i = citas.findIndex(c => c.id === citaEditandoId);
-  if (i < 0) return;
-  citas[i].nombre   = document.getElementById('editNombre').value;
-  citas[i].telefono = document.getElementById('editTel').value;
-  citas[i].servicio = document.getElementById('editServicio').value;
-  citas[i].fecha    = document.getElementById('editFecha').value;
-  citas[i].hora     = document.getElementById('editHora').value;
-  citas[i].estado   = document.getElementById('editEstado').value;
-  citas[i].notas    = document.getElementById('editNotas').value;
-  saveCitas(citas);
+async function guardarEdicion() {
+  const resultado = await actualizarCitaAPI({
+    id:       citaEditandoId,
+    nombre:   document.getElementById('editNombre').value,
+    telefono: document.getElementById('editTel').value,
+    servicio: document.getElementById('editServicio').value,
+    fecha:    document.getElementById('editFecha').value,
+    hora:     document.getElementById('editHora').value,
+    estado:   document.getElementById('editEstado').value,
+    notas:    document.getElementById('editNotas').value
+  });
   cerrarModal();
-  renderCitas();
-  toast('Cita actualizada correctamente');
+  await renderCitas();
+  toast(resultado.ok ? 'Cita actualizada correctamente' : 'Error al actualizar');
 }
 
 // ══════════════════════════════════════════
@@ -693,12 +719,11 @@ function abrirBorrar(id) {
   document.getElementById('modalBorrar').classList.add('open');
 }
 
-function confirmarBorrar() {
-  const citas = getCitas().filter(c => c.id !== citaBorrandoId);
-  saveCitas(citas);
+async function confirmarBorrar() {
+  const resultado = await borrarCitaAPI(citaBorrandoId);
   cerrarModal();
-  renderCitas();
-  toast('Cita eliminada');
+  await renderCitas();
+  toast(resultado.ok ? 'Cita eliminada' : 'Error al eliminar');
 }
 
 function cerrarModal() {
