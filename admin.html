@@ -487,11 +487,11 @@
 // ══════════════════════════════════════════
 //  CONFIGURACIÓN
 // ══════════════════════════════════════════
-const API_URL    = 'https://script.google.com/macros/s/AKfycby1oymWGkzFVT7ar5NBE8m6koMzFWpV9Pz3o_qGFnXNpMLpLFoUA2dMA7sbqrDDoUvK/exec';
-const PASS_KEY   = 'sattra_admin_pass';
-const DIAS_KEY   = 'sattra_dias_bloqueados';
-const HORAS_KEY  = 'sattra_horas_bloqueadas';
-const CONF_KEY   = 'sattra_config';
+const API_URL      = 'https://script.google.com/macros/s/AKfycby1oymWGkzFVT7ar5NBE8m6koMzFWpV9Pz3o_qGFnXNpMLpLFoUA2dMA7sbqrDDoUvK/exec';
+const PASS_KEY     = 'sattra_admin_pass';
+const DIAS_KEY     = 'sattra_dias_bloqueados';
+const HORAS_KEY    = 'sattra_horas_bloqueadas';
+const CONF_KEY     = 'sattra_config';
 const DEFAULT_PASS = 'Sattra2025';
 
 const SERVICIOS = [
@@ -508,9 +508,19 @@ for (let h = 8; h <= 20; h++) {
 }
 
 // ══════════════════════════════════════════
-//  HELPERS STORAGE
+//  STORAGE LOCAL (bloqueos, config, pass)
 // ══════════════════════════════════════════
-const getPass   = ()      => localStorage.getItem(PASS_KEY)   || DEFAULT_PASS;
+const getPass      = ()  => localStorage.getItem(PASS_KEY) || DEFAULT_PASS;
+const getDiasBloq  = ()  => JSON.parse(localStorage.getItem(DIAS_KEY)  || '[]');
+const saveDiasBloq = (d) => localStorage.setItem(DIAS_KEY,  JSON.stringify(d));
+const getHorasBloq = ()  => JSON.parse(localStorage.getItem(HORAS_KEY) || '[]');
+const saveHorasBloq= (h) => localStorage.setItem(HORAS_KEY, JSON.stringify(h));
+const getConf      = ()  => JSON.parse(localStorage.getItem(CONF_KEY)  || '{}');
+const saveConf     = (c) => localStorage.setItem(CONF_KEY,  JSON.stringify(c));
+
+// ══════════════════════════════════════════
+//  API GOOGLE SHEETS
+// ══════════════════════════════════════════
 async function getCitasAPI() {
   try {
     const res  = await fetch(API_URL);
@@ -523,25 +533,35 @@ async function getCitasAPI() {
 }
 
 async function actualizarCitaAPI(cita) {
-  const res  = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'actualizarCita', ...cita }) });
-  return await res.json();
+  try {
+    const res  = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'actualizarCita', ...cita })
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: e.toString() };
+  }
 }
 
 async function borrarCitaAPI(id) {
-  const res  = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'borrarCita', id }) });
-  return await res.json();
+  try {
+    const res  = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'borrarCita', id })
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: e.toString() };
+  }
 }
-const getDiasBloq = ()    => JSON.parse(localStorage.getItem(DIAS_KEY)   || '[]');
-const saveDiasBloq= (d)   => localStorage.setItem(DIAS_KEY, JSON.stringify(d));
-const getHorasBloq= ()    => JSON.parse(localStorage.getItem(HORAS_KEY)  || '[]');
-const saveHorasBloq=(h)   => localStorage.setItem(HORAS_KEY, JSON.stringify(h));
-const getConf   = ()      => JSON.parse(localStorage.getItem(CONF_KEY)   || '{}');
-const saveConf  = (c)     => localStorage.setItem(CONF_KEY, JSON.stringify(c));
 
 // ══════════════════════════════════════════
 //  LOGIN
 // ══════════════════════════════════════════
-document.getElementById('passInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkLogin(); });
+document.getElementById('passInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkLogin();
+});
 
 function checkLogin() {
   const val = document.getElementById('passInput').value;
@@ -578,13 +598,21 @@ function rellenarHorasSelects() {
     const el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Selecciona...</option>';
-    HORAS_DIA.forEach(h => { const o = document.createElement('option'); o.value = h; o.textContent = h; el.appendChild(o); });
+    HORAS_DIA.forEach(h => {
+      const o = document.createElement('option');
+      o.value = h; o.textContent = h;
+      el.appendChild(o);
+    });
   });
 }
 
 function rellenarFiltroServicios() {
   const sel = document.getElementById('filterServicio');
-  SERVICIOS.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+  SERVICIOS.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
 }
 
 // ══════════════════════════════════════════
@@ -597,10 +625,20 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 }
 
-async function renderCitas() {
-  document.getElementById('citasBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gris);">Cargando citas...</td></tr>';
+// ══════════════════════════════════════════
+//  RENDER CITAS
+// ══════════════════════════════════════════
 
-  let citas = await getCitasAPI();
+// Variable global para citas en memoria (usada por abrirEditar y exportarCSV)
+let citasEnMemoria = [];
+
+async function renderCitas() {
+  document.getElementById('citasBody').innerHTML =
+    '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gris);">Cargando citas...</td></tr>';
+
+  citasEnMemoria = await getCitasAPI();
+
+  let citas = [...citasEnMemoria];
 
   const fn = document.getElementById('filterNombre').value.toLowerCase();
   const ff = document.getElementById('filterFecha').value;
@@ -612,7 +650,7 @@ async function renderCitas() {
   if (fe) citas = citas.filter(c => c.estado === fe);
   if (fs) citas = citas.filter(c => c.servicio === fs);
 
-  citas.sort((a,b) => (a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  citas.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
 
   const body = document.getElementById('citasBody');
   body.innerHTML = '';
@@ -625,7 +663,9 @@ async function renderCitas() {
     document.getElementById('tablaCitas').style.display = 'table';
     citas.forEach(c => {
       const tr = document.createElement('tr');
-      const badgeClass = c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'cancelada' ? 'badge-cancelada' : 'badge-pendiente';
+      const badgeClass = c.estado === 'confirmada'
+        ? 'badge-confirmada' : c.estado === 'cancelada'
+        ? 'badge-cancelada' : 'badge-pendiente';
       tr.innerHTML = `
         <td><strong>${c.nombre}</strong></td>
         <td>${c.telefono || '—'}</td>
@@ -640,16 +680,18 @@ async function renderCitas() {
       body.appendChild(tr);
     });
   }
-  actualizarStatsDesde(citas);
+  actualizarStatsDesde(citasEnMemoria);
 }
 
 function actualizarStatsDesde(citas) {
-  const hoy  = new Date().toISOString().split('T')[0];
-  const ini  = new Date(); ini.setDate(ini.getDate() - ini.getDay());
-  const fin  = new Date(ini); fin.setDate(fin.getDate() + 6);
+  const hoy = new Date().toISOString().split('T')[0];
+  const ini = new Date(); ini.setDate(ini.getDate() - ini.getDay());
+  const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
   document.getElementById('statTotal').textContent      = citas.length;
   document.getElementById('statHoy').textContent        = citas.filter(c => c.fecha === hoy).length;
-  document.getElementById('statSemana').textContent     = citas.filter(c => c.fecha >= ini.toISOString().split('T')[0] && c.fecha <= fin.toISOString().split('T')[0]).length;
+  document.getElementById('statSemana').textContent     = citas.filter(c =>
+    c.fecha >= ini.toISOString().split('T')[0] &&
+    c.fecha <= fin.toISOString().split('T')[0]).length;
   document.getElementById('statPendientes').textContent = citas.filter(c => c.estado === 'pendiente').length;
 }
 
@@ -659,30 +701,16 @@ function formatFecha(f) {
   return `${d}/${m}/${y}`;
 }
 
-function actualizarStats() {
-  const citas = getCitas();
-  const hoy = new Date().toISOString().split('T')[0];
-  const ini = new Date(); ini.setDate(ini.getDate() - ini.getDay());
-  const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
-  const iniS = ini.toISOString().split('T')[0];
-  const finS = fin.toISOString().split('T')[0];
-
-  document.getElementById('statTotal').textContent     = citas.length;
-  document.getElementById('statHoy').textContent       = citas.filter(c => c.fecha === hoy).length;
-  document.getElementById('statSemana').textContent    = citas.filter(c => c.fecha >= iniS && c.fecha <= finS).length;
-  document.getElementById('statPendientes').textContent= citas.filter(c => c.estado === 'pendiente').length;
-}
-
 // ══════════════════════════════════════════
 //  EDITAR / REPROGRAMAR
 // ══════════════════════════════════════════
 let citaEditandoId = null;
 
 function abrirEditar(id) {
-  const cita = getCitas().find(c => c.id === id);
+  // Usa la variable en memoria — ya no llama a getCitas()
+  const cita = citasEnMemoria.find(c => c.id === id);
   if (!cita) return;
   citaEditandoId = id;
-  document.getElementById('editId').value       = id;
   document.getElementById('editNombre').value   = cita.nombre;
   document.getElementById('editTel').value      = cita.telefono || '';
   document.getElementById('editServicio').value = cita.servicio;
@@ -730,7 +758,6 @@ function cerrarModal() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
 }
 
-// Cerrar modal al click fuera
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
 });
@@ -753,19 +780,19 @@ function bloquearDia() {
 }
 
 function bloquearHora() {
-  const fecha = document.getElementById('bloquearFechaHora').value;
-  const ini   = document.getElementById('bloquearHoraInicio').value;
-  const fin   = document.getElementById('bloquearHoraFin').value;
-  const motivo= document.getElementById('motivoHora').value;
+  const fecha  = document.getElementById('bloquearFechaHora').value;
+  const ini    = document.getElementById('bloquearHoraInicio').value;
+  const fin    = document.getElementById('bloquearHoraFin').value;
+  const motivo = document.getElementById('motivoHora').value;
   if (!fecha || !ini || !fin) { alert('Completa todos los campos'); return; }
   if (ini >= fin) { alert('La hora de inicio debe ser anterior a la de fin'); return; }
   const horas = getHorasBloq();
   horas.push({ id: Date.now().toString(), fecha, ini, fin, motivo: motivo || 'Sin motivo' });
   saveHorasBloq(horas);
-  document.getElementById('bloquearFechaHora').value   = '';
-  document.getElementById('bloquearHoraInicio').value  = '';
-  document.getElementById('bloquearHoraFin').value     = '';
-  document.getElementById('motivoHora').value          = '';
+  document.getElementById('bloquearFechaHora').value  = '';
+  document.getElementById('bloquearHoraInicio').value = '';
+  document.getElementById('bloquearHoraFin').value    = '';
+  document.getElementById('motivoHora').value         = '';
   renderBloqueos();
   toast('Horario bloqueado');
 }
@@ -775,7 +802,9 @@ function renderBloqueos() {
   const horas = getHorasBloq();
 
   const ld = document.getElementById('listaDias');
-  ld.innerHTML = dias.length ? '' : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin días bloqueados.</p>';
+  ld.innerHTML = dias.length
+    ? ''
+    : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin días bloqueados.</p>';
   dias.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(d => {
     const el = document.createElement('div');
     el.className = 'blocked-item';
@@ -785,7 +814,9 @@ function renderBloqueos() {
   });
 
   const lh = document.getElementById('listaHoras');
-  lh.innerHTML = horas.length ? '' : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin horarios bloqueados.</p>';
+  lh.innerHTML = horas.length
+    ? ''
+    : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin horarios bloqueados.</p>';
   horas.sort((a,b) => (a.fecha+a.ini).localeCompare(b.fecha+b.ini)).forEach(h => {
     const el = document.createElement('div');
     el.className = 'blocked-item';
@@ -812,7 +843,6 @@ const DIAS_SEMANA = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado',
 function initConfig() {
   const conf = getConf();
   const diasActivos = conf.diasActivos || [0,1,2,3,4];
-
   const cont = document.getElementById('diasLaborales');
   cont.innerHTML = '';
   DIAS_SEMANA.forEach((d, i) => {
@@ -824,11 +854,10 @@ function initConfig() {
     btn.onclick = () => {
       const isActive = btn.style.background.includes('rgb(201');
       btn.style.background = isActive ? 'rgba(255,255,255,0.05)' : 'var(--dorado)';
-      btn.style.color = isActive ? 'rgba(255,255,255,0.5)' : 'var(--negro)';
+      btn.style.color      = isActive ? 'rgba(255,255,255,0.5)'  : 'var(--negro)';
     };
     cont.appendChild(btn);
   });
-
   if (conf.apertura) document.getElementById('configApertura').value = conf.apertura;
   if (conf.cierre)   document.getElementById('configCierre').value   = conf.cierre;
 }
@@ -845,7 +874,7 @@ function guardarHorario() {
   const ap = document.getElementById('configApertura').value;
   const ci = document.getElementById('configCierre').value;
   if (!ap || !ci) { alert('Selecciona apertura y cierre'); return; }
-  if (ap >= ci) { alert('La apertura debe ser antes del cierre'); return; }
+  if (ap >= ci)   { alert('La apertura debe ser antes del cierre'); return; }
   const conf = getConf(); conf.apertura = ap; conf.cierre = ci; saveConf(conf);
   toast('Horario guardado');
 }
@@ -854,9 +883,9 @@ function cambiarPassword() {
   const actual   = document.getElementById('passActual').value;
   const nueva    = document.getElementById('passNueva').value;
   const confirma = document.getElementById('passConfirm').value;
-  if (actual !== getPass())   { alert('La contraseña actual es incorrecta'); return; }
-  if (nueva.length < 6)       { alert('La nueva contraseña debe tener al menos 6 caracteres'); return; }
-  if (nueva !== confirma)     { alert('Las contraseñas no coinciden'); return; }
+  if (actual !== getPass())  { alert('La contraseña actual es incorrecta'); return; }
+  if (nueva.length < 6)      { alert('La nueva contraseña debe tener al menos 6 caracteres'); return; }
+  if (nueva !== confirma)    { alert('Las contraseñas no coinciden'); return; }
   localStorage.setItem(PASS_KEY, nueva);
   document.getElementById('passActual').value  = '';
   document.getElementById('passNueva').value   = '';
@@ -865,13 +894,12 @@ function cambiarPassword() {
 }
 
 // ══════════════════════════════════════════
-//  EXPORTAR CSV
+//  EXPORTAR CSV  ← ahora usa citasEnMemoria
 // ══════════════════════════════════════════
 function exportarCSV() {
-  const citas = getCitas();
-  if (!citas.length) { alert('No hay citas para exportar'); return; }
+  if (!citasEnMemoria.length) { alert('No hay citas para exportar'); return; }
   let csv = 'Nombre,Teléfono,Servicio,Fecha,Hora,Estado,Notas\n';
-  citas.forEach(c => {
+  citasEnMemoria.forEach(c => {
     csv += `"${c.nombre}","${c.telefono||''}","${c.servicio}","${c.fecha}","${c.hora}","${c.estado}","${c.notas||''}"\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

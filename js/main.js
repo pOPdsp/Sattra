@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════
-//  CONFIGURACIÓN — PON TU URL AQUÍ
+//  CONFIGURACIÓN
 // ══════════════════════════════════════════
 const API_URL = 'https://script.google.com/macros/s/AKfycby1oymWGkzFVT7ar5NBE8m6koMzFWpV9Pz3o_qGFnXNpMLpLFoUA2dMA7sbqrDDoUvK/exec';
 
@@ -48,7 +48,6 @@ if (form) {
       return;
     }
 
-    // Estado de carga
     if (btnSubmit) { btnSubmit.textContent = 'Enviando...'; btnSubmit.disabled = true; }
 
     const nuevaCita = {
@@ -59,8 +58,8 @@ if (form) {
 
     try {
       const res = await fetch(API_URL, {
-        method:  'POST',
-        body:    JSON.stringify(nuevaCita)
+        method: 'POST',
+        body:   JSON.stringify(nuevaCita)
       });
       const data = await res.json();
 
