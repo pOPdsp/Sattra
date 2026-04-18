@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SATTRA · Panel de Administración</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --dorado: #C9A84C;
+      --dorado-claro: #E8C97A;
+      --dorado-oscuro: #9A7A30;
+      --negro: #1A1A1A;
+      --negro2: #242424;
+      --blanco: #FFFFFF;
+      --gris: #888;
+      --borde: rgba(201,168,76,0.2);
+      --rojo: #c0392b;
+      --verde: #27ae60;
+    }
+    body { font-family: 'Montserrat', sans-serif; background: var(--negro); color: var(--blanco); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #loginScreen {
+      min-height: 100vh; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .login-box {
+      background: var(--negro2); border: 1px solid var(--borde);
+      padding: 52px 44px; width: 100%; max-width: 380px; text-align: center;
+    }
+    .login-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 36px; letter-spacing: 8px; color: var(--dorado);
+      margin-bottom: 4px;
+    }
+    .login-sub { font-size: 9px; letter-spacing: 3px; color: var(--gris); text-transform: uppercase; margin-bottom: 36px; }
+    .login-divider { width: 40px; height: 1px; background: var(--borde); margin: 0 auto 32px; }
+    .login-box label { display: block; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dorado); margin-bottom: 8px; text-align: left; }
+    .login-box input[type="password"] {
+      width: 100%; padding: 13px 16px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--borde); color: var(--blanco);
+      font-family: 'Montserrat', sans-serif; font-size: 14px;
+      letter-spacing: 4px; margin-bottom: 20px;
+    }
+    .login-box input[type="password"]:focus { outline: none; border-color: var(--dorado); }
+    .btn-login {
+      width: 100%; padding: 14px; background: var(--dorado);
+      color: var(--negro); border: none; cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      transition: background 0.3s;
+    }
+    .btn-login:hover { background: var(--dorado-claro); }
+    .login-error { color: #e74c3c; font-size: 11px; margin-top: 12px; display: none; letter-spacing: 1px; }
+
+    /* ── PANEL ── */
+    #adminPanel { display: none; }
+    .admin-header {
+      background: var(--negro2); border-bottom: 1px solid var(--borde);
+      padding: 16px 32px; display: flex;
+      align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .admin-header-logo { font-family: 'Cormorant Garamond', serif; font-size: 22px; letter-spacing: 5px; color: var(--dorado); }
+    .admin-header-right { display: flex; align-items: center; gap: 16px; }
+    .admin-header-right span { font-size: 10px; letter-spacing: 1px; color: var(--gris); }
+    .btn-logout {
+      padding: 8px 20px; border: 1px solid var(--borde);
+      background: none; color: var(--dorado); cursor: pointer;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      transition: all 0.3s;
+    }
+    .btn-logout:hover { background: var(--dorado); color: var(--negro); }
+
+    .admin-body { display: flex; min-height: calc(100vh - 58px); }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px; background: var(--negro2);
+      border-right: 1px solid var(--borde);
+      padding: 24px 0; flex-shrink: 0;
+    }
+    .sidebar-item {
+      display: block; padding: 13px 28px;
+      font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; color: rgba(255,255,255,0.5);
+      cursor: pointer; border-left: 2px solid transparent;
+      transition: all 0.2s; text-decoration: none;
+    }
+    .sidebar-item:hover, .sidebar-item.active {
+      color: var(--dorado); border-left-color: var(--dorado);
+      background: rgba(201,168,76,0.05);
+    }
+    .sidebar-section {
+      font-size: 8px; letter-spacing: 3px; color: var(--gris);
+      padding: 20px 28px 8px; text-transform: uppercase;
+    }
+
+    /* CONTENT */
+    .admin-content { flex: 1; padding: 32px; overflow-y: auto; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--negro2); border: 1px solid var(--borde);
+      padding: 24px 20px; text-align: center;
+    }
+    .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 300; color: var(--dorado); line-height: 1; }
+    .stat-label { font-size: 9px; letter-spacing: 2px; color: var(--gris); text-transform: uppercase; margin-top: 6px; }
+
+    /* TABLA CITAS */
+    .section-heading {
+      font-size: 10px; letter-spacing: 3px; color: var(--dorado);
+      text-transform: uppercase; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px solid var(--borde);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 12px; background: var(--negro2);
+      border: 1px solid var(--borde); color: var(--blanco);
+      font-size: 11px; font-family: 'Montserrat', sans-serif;
+    }
+    .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--dorado); }
+    .filter-bar select option { background: var(--negro); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      text-align: left; font-size: 9px; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--dorado);
+      padding: 10px 14px; border-bottom: 1px solid var(--borde);
+    }
+    td { padding: 12px 14px; border-bottom: 1px solid rgba(201,168,76,0.08); color: rgba(255,255,255,0.8); vertical-align: middle; }
+    tr:hover td { background: rgba(201,168,76,0.04); }
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+      border-radius: 2px;
+    }
+    .badge-confirmada { background: rgba(39,174,96,0.15); color: #2ecc71; border: 1px solid rgba(39,174,96,0.3); }
+    .badge-pendiente { background: rgba(201,168,76,0.15); color: var(--dorado); border: 1px solid var(--borde); }
+    .badge-cancelada { background: rgba(192,57,43,0.15); color: #e74c3c; border: 1px solid rgba(192,57,43,0.3); }
+    .btn-icon {
+      background: none; border: 1px solid var(--borde); color: var(--dorado);
+      padding: 5px 10px; cursor: pointer; font-size: 11px;
+      margin-right: 4px; transition: all 0.2s;
+    }
+    .btn-icon:hover { background: var(--dorado); color: var(--negro); }
+    .btn-icon.danger { border-color: rgba(192,57,43,0.4); color: #e74c3c; }
+    .btn-icon.danger:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+    .empty-state { text-align: center; padding: 48px; color: var(--gris); font-size: 12px; letter-spacing: 1px; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--negro2); border: 1px solid var(--borde);
+      width: 100%; max-width: 480px; padding: 36px;
+    }
+    .modal-title { font-size: 11px; letter-spacing: 3px; color: var(--dorado); text-transform: uppercase; margin-bottom: 24px; }
+    .modal label { display: block; font-size: 9px; letter-spacing: 2px; color: var(--gris); text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; }
+    .modal input, .modal select, .modal textarea {
+      width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--borde); color: var(--blanco);
+      font-family: 'Montserrat', sans-serif; font-size: 13px;
+    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus { outline: none; border-color: var(--dorado); }
+    .modal select option { background: var(--negro); }
+    .modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-modal-save {
+      flex: 1; padding: 12px; background: var(--dorado);
+      color: var(--negro); border: none; cursor: pointer;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .btn-modal-cancel {
+      flex: 1; padding: 12px; background: none;
+      border: 1px solid var(--borde); color: var(--gris); cursor: pointer;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* BLOQUEOS */
+    .block-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .block-card { background: var(--negro2); border: 1px solid var(--borde); padding: 24px; }
+    .block-card h3 { font-size: 10px; letter-spacing: 2px; color: var(--dorado); text-transform: uppercase; margin-bottom: 18px; }
+    .block-card label { display: block; font-size: 9px; letter-spacing: 1px; color: var(--gris); text-transform: uppercase; margin-bottom: 6px; margin-top: 12px; }
+    .block-card input, .block-card select {
+      width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--borde); color: var(--blanco);
+      font-family: 'Montserrat', sans-serif; font-size: 13px; margin-bottom: 4px;
+    }
+    .block-card input:focus, .block-card select:focus { outline: none; border-color: var(--dorado); }
+    .block-card select option { background: var(--negro); }
+    .btn-block {
+      width: 100%; padding: 11px; background: var(--dorado);
+      color: var(--negro); border: none; cursor: pointer;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      font-family: 'Montserrat', sans-serif; margin-top: 16px;
+    }
+    .blocked-list { margin-top: 16px; }
+    .blocked-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: rgba(201,168,76,0.05);
+      border: 1px solid var(--borde); margin-bottom: 6px; font-size: 11px;
+    }
+    .blocked-item span { color: rgba(255,255,255,0.7); }
+    .btn-remove-block { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; }
+
+    /* CONFIGURACIÓN */
+    .config-card { background: var(--negro2); border: 1px solid var(--borde); padding: 28px; margin-bottom: 20px; }
+    .config-card h3 { font-size: 10px; letter-spacing: 2px; color: var(--dorado); text-transform: uppercase; margin-bottom: 18px; }
+    .config-card label { display: block; font-size: 9px; letter-spacing: 1px; color: var(--gris); text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; }
+    .config-card input, .config-card select {
+      width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--borde); color: var(--blanco);
+      font-family: 'Montserrat', sans-serif; font-size: 13px;
+    }
+    .config-card input:focus { outline: none; border-color: var(--dorado); }
+    .btn-save-config {
+      padding: 11px 28px; background: var(--dorado);
+      color: var(--negro); border: none; cursor: pointer;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      font-family: 'Montserrat', sans-serif; margin-top: 16px;
+    }
+    .success-toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--negro2); border: 1px solid var(--dorado);
+      color: var(--dorado); padding: 14px 24px;
+      font-size: 11px; letter-spacing: 1px; z-index: 9999;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .admin-body { flex-direction: column; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--borde); display: flex; overflow-x: auto; padding: 0; }
+      .sidebar-section { display: none; }
+      .sidebar-item { white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; padding: 14px 20px; }
+      .sidebar-item.active { border-bottom-color: var(--dorado); border-left: none; }
+      .block-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">SATTRA</div>
+    <p class="login-sub">Panel de Administración</p>
+    <div class="login-divider"></div>
+    <label for="passInput">Contraseña de acceso</label>
+    <input type="password" id="passInput" placeholder="••••••••" autocomplete="current-password" />
+    <button class="btn-login" onclick="checkLogin()">Ingresar</button>
+    <p class="login-error" id="loginError">Contraseña incorrecta. Intenta nuevamente.</p>
+    <p style="font-size:10px;color:rgba(255,255,255,0.15);margin-top:24px;letter-spacing:1px;">
+      <a href="index.html" style="color:inherit;text-decoration:none;">← Volver al sitio</a>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════ PANEL ═══════════════ -->
+<div id="adminPanel">
+
+  <div class="admin-header">
+    <div class="admin-header-logo">SATTRA</div>
+    <div class="admin-header-right">
+      <span>Panel de Administración</span>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-section">Gestión</div>
+      <a class="sidebar-item active" onclick="showTab('citas')">📋 Citas</a>
+      <a class="sidebar-item" onclick="showTab('bloqueos')">🔒 Bloqueos</a>
+      <div class="sidebar-section">Sistema</div>
+      <a class="sidebar-item" onclick="showTab('config')">⚙ Configuración</a>
+      <a href="index.html" class="sidebar-item">← Sitio web</a>
+    </nav>
+
+    <!-- CONTENIDO -->
+    <div class="admin-content">
+
+      <!-- TAB: CITAS -->
+      <div class="tab-content active" id="tab-citas">
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-num" id="statTotal">0</div>
+            <div class="stat-label">Total de citas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statHoy">0</div>
+            <div class="stat-label">Citas hoy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statSemana">0</div>
+            <div class="stat-label">Esta semana</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statPendientes">0</div>
+            <div class="stat-label">Pendientes</div>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <span>Listado de Citas</span>
+          <button class="btn-icon" onclick="exportarCSV()">⬇ Exportar CSV</button>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="filterNombre" placeholder="Buscar por nombre..." oninput="renderCitas()" />
+          <input type="date" id="filterFecha" onchange="renderCitas()" />
+          <select id="filterEstado" onchange="renderCitas()">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+          <select id="filterServicio" onchange="renderCitas()">
+            <option value="">Todos los servicios</option>
+          </select>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table id="tablaCitas">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="citasBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyState" style="display:none;">No hay citas que coincidan con los filtros.</div>
+      </div>
+
+      <!-- TAB: BLOQUEOS -->
+      <div class="tab-content" id="tab-bloqueos">
+        <div class="section-heading"><span>Bloqueos de Calendario</span></div>
+        <div class="block-grid">
+
+          <div class="block-card">
+            <h3>🗓 Bloquear Día Completo</h3>
+            <label>Fecha a bloquear</label>
+            <input type="date" id="bloquearDia" />
+            <label>Motivo (opcional)</label>
+            <input type="text" id="motivoDia" placeholder="Vacaciones, feriado..." />
+            <button class="btn-block" onclick="bloquearDia()">Bloquear Día</button>
+            <div class="blocked-list" id="listaDias"></div>
+          </div>
+
+          <div class="block-card">
+            <h3>🕐 Bloquear Hora Específica</h3>
+            <label>Fecha</label>
+            <input type="date" id="bloquearFechaHora" />
+            <label>Hora de inicio</label>
+            <select id="bloquearHoraInicio">
+              <option value="">Selecciona...</option>
+            </select>
+            <label>Hora de fin</label>
+            <select id="bloquearHoraFin">
+              <option value="">Selecciona...</option>
+            </select>
+            <label>Motivo (opcional)</label>
+            <input type="text" id="motivoHora" placeholder="Reunión, mantenimiento..." />
+            <button class="btn-block" onclick="bloquearHora()">Bloquear Horario</button>
+            <div class="blocked-list" id="listaHoras"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: CONFIGURACIÓN -->
+      <div class="tab-content" id="tab-config">
+        <div class="section-heading"><span>Configuración del Sistema</span></div>
+
+        <div class="config-card">
+          <h3>🔑 Cambiar Contraseña</h3>
+          <label>Contraseña actual</label>
+          <input type="password" id="passActual" placeholder="••••••••" />
+          <label>Nueva contraseña</label>
+          <input type="password" id="passNueva" placeholder="••••••••" />
+          <label>Confirmar nueva contraseña</label>
+          <input type="password" id="passConfirm" placeholder="••••••••" />
+          <button class="btn-save-config" onclick="cambiarPassword()">Guardar contraseña</button>
+        </div>
+
+        <div class="config-card">
+          <h3>📅 Días Laborales</h3>
+          <p style="font-size:11px;color:var(--gris);margin-bottom:16px;">Selecciona los días en que el negocio atiende.</p>
+          <div id="diasLaborales" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          <button class="btn-save-config" onclick="guardarDias()">Guardar días</button>
+        </div>
+
+        <div class="config-card">
+          <h3>⏰ Horario de Atención</h3>
+          <label>Hora de apertura</label>
+          <select id="configApertura"></select>
+          <label>Hora de cierre (última cita)</label>
+          <select id="configCierre"></select>
+          <button class="btn-save-config" onclick="guardarHorario()">Guardar horario</button>
+        </div>
+
+      </div>
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-body -->
+</div><!-- /adminPanel -->
+
+<!-- MODAL EDITAR CITA -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <div class="modal-title">Editar / Reprogramar Cita</div>
+    <input type="hidden" id="editId" />
+    <label>Nombre</label>
+    <input type="text" id="editNombre" />
+    <label>Teléfono</label>
+    <input type="text" id="editTel" />
+    <label>Servicio</label>
+    <select id="editServicio">
+      <option>Depilación Permanente</option>
+      <option>Hidrafacial Facial</option>
+      <option>Hidrafacial Corporal</option>
+      <option>Láser Antiedad</option>
+      <option>Microagujas</option>
+      <option>Hollywood Peel</option>
+      <option>Radiofrecuencia Tripolar</option>
+      <option>Cromoterapia</option>
+      <option>Lipolaser</option>
+      <option>Gimnasia Pasiva</option>
+      <option>Mesoterapia</option>
+      <option>Sueroterapia</option>
+      <option>Limpieza Facial</option>
+    </select>
+    <label>Fecha</label>
+    <input type="date" id="editFecha" />
+    <label>Hora</label>
+    <select id="editHora"></select>
+    <label>Estado</label>
+    <select id="editEstado">
+      <option value="pendiente">Pendiente</option>
+      <option value="confirmada">Confirmada</option>
+      <option value="cancelada">Cancelada</option>
+    </select>
+    <label>Notas</label>
+    <textarea id="editNotas" rows="2"></textarea>
+    <div class="modal-buttons">
+      <button class="btn-modal-save" onclick="guardarEdicion()">Guardar cambios</button>
+      <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR BORRAR -->
+<div class="modal-overlay" id="modalBorrar">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <div class="modal-title">Confirmar eliminación</div>
+    <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:24px;">¿Seguro que deseas eliminar esta cita? Esta acción no se puede deshacer.</p>
+    <div class="modal-buttons">
+      <button class="btn-modal-save" style="background:#c0392b;" onclick="confirmarBorrar()">Eliminar</button>
+      <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="success-toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIGURACIÓN
+// ══════════════════════════════════════════
+const PASS_KEY   = 'sattra_admin_pass';
+const CITAS_KEY  = 'sattra_citas';
+const DIAS_KEY   = 'sattra_dias_bloqueados';
+const HORAS_KEY  = 'sattra_horas_bloqueadas';
+const CONF_KEY   = 'sattra_config';
+
+const DEFAULT_PASS = 'Sattra2025';
+
+const SERVICIOS = [
+  'Depilación Permanente','Hidrafacial Facial','Hidrafacial Corporal',
+  'Láser Antiedad','Microagujas','Hollywood Peel',
+  'Radiofrecuencia Tripolar','Cromoterapia','Lipolaser',
+  'Gimnasia Pasiva','Mesoterapia','Sueroterapia','Limpieza Facial'
+];
+
+const HORAS_DIA = [];
+for (let h = 8; h <= 20; h++) {
+  HORAS_DIA.push(`${String(h).padStart(2,'0')}:00`);
+  if (h < 20) HORAS_DIA.push(`${String(h).padStart(2,'0')}:30`);
+}
+
+// ══════════════════════════════════════════
+//  HELPERS STORAGE
+// ══════════════════════════════════════════
+const getPass   = ()      => localStorage.getItem(PASS_KEY)   || DEFAULT_PASS;
+const getCitas  = ()      => JSON.parse(localStorage.getItem(CITAS_KEY)  || '[]');
+const saveCitas = (c)     => localStorage.setItem(CITAS_KEY, JSON.stringify(c));
+const getDiasBloq = ()    => JSON.parse(localStorage.getItem(DIAS_KEY)   || '[]');
+const saveDiasBloq= (d)   => localStorage.setItem(DIAS_KEY, JSON.stringify(d));
+const getHorasBloq= ()    => JSON.parse(localStorage.getItem(HORAS_KEY)  || '[]');
+const saveHorasBloq=(h)   => localStorage.setItem(HORAS_KEY, JSON.stringify(h));
+const getConf   = ()      => JSON.parse(localStorage.getItem(CONF_KEY)   || '{}');
+const saveConf  = (c)     => localStorage.setItem(CONF_KEY, JSON.stringify(c));
+
+// ══════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════
+document.getElementById('passInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkLogin(); });
+
+function checkLogin() {
+  const val = document.getElementById('passInput').value;
+  if (val === getPass()) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminPanel').style.display  = 'block';
+    initPanel();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('passInput').value = '';
+  }
+}
+
+function logout() {
+  document.getElementById('adminPanel').style.display  = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('passInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+function initPanel() {
+  rellenarHorasSelects();
+  rellenarFiltroServicios();
+  renderCitas();
+  renderBloqueos();
+  initConfig();
+}
+
+function rellenarHorasSelects() {
+  ['bloquearHoraInicio','bloquearHoraFin','editHora','configApertura','configCierre'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">Selecciona...</option>';
+    HORAS_DIA.forEach(h => { const o = document.createElement('option'); o.value = h; o.textContent = h; el.appendChild(o); });
+  });
+}
+
+function rellenarFiltroServicios() {
+  const sel = document.getElementById('filterServicio');
+  SERVICIOS.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+}
+
+// ══════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  RENDER CITAS
+// ══════════════════════════════════════════
+function renderCitas() {
+  let citas = getCitas();
+  const fn = document.getElementById('filterNombre').value.toLowerCase();
+  const ff = document.getElementById('filterFecha').value;
+  const fe = document.getElementById('filterEstado').value;
+  const fs = document.getElementById('filterServicio').value;
+
+  if (fn) citas = citas.filter(c => c.nombre.toLowerCase().includes(fn));
+  if (ff) citas = citas.filter(c => c.fecha === ff);
+  if (fe) citas = citas.filter(c => c.estado === fe);
+  if (fs) citas = citas.filter(c => c.servicio === fs);
+
+  citas.sort((a,b) => (a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+
+  const body = document.getElementById('citasBody');
+  body.innerHTML = '';
+
+  if (citas.length === 0) {
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('tablaCitas').style.display = 'none';
+  } else {
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('tablaCitas').style.display = 'table';
+    citas.forEach(c => {
+      const tr = document.createElement('tr');
+      const badgeClass = c.estado === 'confirmada' ? 'badge-confirmada' : c.estado === 'cancelada' ? 'badge-cancelada' : 'badge-pendiente';
+      tr.innerHTML = `
+        <td><strong>${c.nombre}</strong></td>
+        <td>${c.telefono || '—'}</td>
+        <td>${c.servicio}</td>
+        <td>${formatFecha(c.fecha)}</td>
+        <td>${c.hora}</td>
+        <td><span class="badge ${badgeClass}">${c.estado}</span></td>
+        <td>
+          <button class="btn-icon" onclick="abrirEditar('${c.id}')">✏ Editar</button>
+          <button class="btn-icon danger" onclick="abrirBorrar('${c.id}')">✕ Borrar</button>
+        </td>`;
+      body.appendChild(tr);
+    });
+  }
+  actualizarStats();
+}
+
+function formatFecha(f) {
+  if (!f) return '—';
+  const [y,m,d] = f.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function actualizarStats() {
+  const citas = getCitas();
+  const hoy = new Date().toISOString().split('T')[0];
+  const ini = new Date(); ini.setDate(ini.getDate() - ini.getDay());
+  const fin = new Date(ini); fin.setDate(fin.getDate() + 6);
+  const iniS = ini.toISOString().split('T')[0];
+  const finS = fin.toISOString().split('T')[0];
+
+  document.getElementById('statTotal').textContent     = citas.length;
+  document.getElementById('statHoy').textContent       = citas.filter(c => c.fecha === hoy).length;
+  document.getElementById('statSemana').textContent    = citas.filter(c => c.fecha >= iniS && c.fecha <= finS).length;
+  document.getElementById('statPendientes').textContent= citas.filter(c => c.estado === 'pendiente').length;
+}
+
+// ══════════════════════════════════════════
+//  EDITAR / REPROGRAMAR
+// ══════════════════════════════════════════
+let citaEditandoId = null;
+
+function abrirEditar(id) {
+  const cita = getCitas().find(c => c.id === id);
+  if (!cita) return;
+  citaEditandoId = id;
+  document.getElementById('editId').value       = id;
+  document.getElementById('editNombre').value   = cita.nombre;
+  document.getElementById('editTel').value      = cita.telefono || '';
+  document.getElementById('editServicio').value = cita.servicio;
+  document.getElementById('editFecha').value    = cita.fecha;
+  document.getElementById('editHora').value     = cita.hora;
+  document.getElementById('editEstado').value   = cita.estado;
+  document.getElementById('editNotas').value    = cita.notas || '';
+  document.getElementById('modalEditar').classList.add('open');
+}
+
+function guardarEdicion() {
+  const citas = getCitas();
+  const i = citas.findIndex(c => c.id === citaEditandoId);
+  if (i < 0) return;
+  citas[i].nombre   = document.getElementById('editNombre').value;
+  citas[i].telefono = document.getElementById('editTel').value;
+  citas[i].servicio = document.getElementById('editServicio').value;
+  citas[i].fecha    = document.getElementById('editFecha').value;
+  citas[i].hora     = document.getElementById('editHora').value;
+  citas[i].estado   = document.getElementById('editEstado').value;
+  citas[i].notas    = document.getElementById('editNotas').value;
+  saveCitas(citas);
+  cerrarModal();
+  renderCitas();
+  toast('Cita actualizada correctamente');
+}
+
+// ══════════════════════════════════════════
+//  BORRAR
+// ══════════════════════════════════════════
+let citaBorrandoId = null;
+
+function abrirBorrar(id) {
+  citaBorrandoId = id;
+  document.getElementById('modalBorrar').classList.add('open');
+}
+
+function confirmarBorrar() {
+  const citas = getCitas().filter(c => c.id !== citaBorrandoId);
+  saveCitas(citas);
+  cerrarModal();
+  renderCitas();
+  toast('Cita eliminada');
+}
+
+function cerrarModal() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+}
+
+// Cerrar modal al click fuera
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
+});
+
+// ══════════════════════════════════════════
+//  BLOQUEOS
+// ══════════════════════════════════════════
+function bloquearDia() {
+  const dia    = document.getElementById('bloquearDia').value;
+  const motivo = document.getElementById('motivoDia').value;
+  if (!dia) { alert('Selecciona una fecha'); return; }
+  const dias = getDiasBloq();
+  if (dias.find(d => d.fecha === dia)) { alert('Ese día ya está bloqueado'); return; }
+  dias.push({ fecha: dia, motivo: motivo || 'Sin motivo' });
+  saveDiasBloq(dias);
+  document.getElementById('bloquearDia').value = '';
+  document.getElementById('motivoDia').value   = '';
+  renderBloqueos();
+  toast('Día bloqueado');
+}
+
+function bloquearHora() {
+  const fecha = document.getElementById('bloquearFechaHora').value;
+  const ini   = document.getElementById('bloquearHoraInicio').value;
+  const fin   = document.getElementById('bloquearHoraFin').value;
+  const motivo= document.getElementById('motivoHora').value;
+  if (!fecha || !ini || !fin) { alert('Completa todos los campos'); return; }
+  if (ini >= fin) { alert('La hora de inicio debe ser anterior a la de fin'); return; }
+  const horas = getHorasBloq();
+  horas.push({ id: Date.now().toString(), fecha, ini, fin, motivo: motivo || 'Sin motivo' });
+  saveHorasBloq(horas);
+  document.getElementById('bloquearFechaHora').value   = '';
+  document.getElementById('bloquearHoraInicio').value  = '';
+  document.getElementById('bloquearHoraFin').value     = '';
+  document.getElementById('motivoHora').value          = '';
+  renderBloqueos();
+  toast('Horario bloqueado');
+}
+
+function renderBloqueos() {
+  const dias  = getDiasBloq();
+  const horas = getHorasBloq();
+
+  const ld = document.getElementById('listaDias');
+  ld.innerHTML = dias.length ? '' : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin días bloqueados.</p>';
+  dias.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'blocked-item';
+    el.innerHTML = `<span>📅 ${formatFecha(d.fecha)} — ${d.motivo}</span>
+      <button class="btn-remove-block" onclick="desbloquearDia('${d.fecha}')">✕</button>`;
+    ld.appendChild(el);
+  });
+
+  const lh = document.getElementById('listaHoras');
+  lh.innerHTML = horas.length ? '' : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin horarios bloqueados.</p>';
+  horas.sort((a,b) => (a.fecha+a.ini).localeCompare(b.fecha+b.ini)).forEach(h => {
+    const el = document.createElement('div');
+    el.className = 'blocked-item';
+    el.innerHTML = `<span>🕐 ${formatFecha(h.fecha)} ${h.ini}–${h.fin} — ${h.motivo}</span>
+      <button class="btn-remove-block" onclick="desbloquearHora('${h.id}')">✕</button>`;
+    lh.appendChild(el);
+  });
+}
+
+function desbloquearDia(fecha) {
+  saveDiasBloq(getDiasBloq().filter(d => d.fecha !== fecha));
+  renderBloqueos(); toast('Día desbloqueado');
+}
+function desbloquearHora(id) {
+  saveHorasBloq(getHorasBloq().filter(h => h.id !== id));
+  renderBloqueos(); toast('Horario desbloqueado');
+}
+
+// ══════════════════════════════════════════
+//  CONFIGURACIÓN
+// ══════════════════════════════════════════
+const DIAS_SEMANA = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+function initConfig() {
+  const conf = getConf();
+  const diasActivos = conf.diasActivos || [0,1,2,3,4];
+
+  const cont = document.getElementById('diasLaborales');
+  cont.innerHTML = '';
+  DIAS_SEMANA.forEach((d, i) => {
+    const activo = diasActivos.includes(i);
+    const btn = document.createElement('button');
+    btn.textContent = d;
+    btn.dataset.idx = i;
+    btn.style.cssText = `padding:8px 16px;border:1px solid var(--borde);background:${activo ? 'var(--dorado)' : 'rgba(255,255,255,0.05)'};color:${activo ? 'var(--negro)' : 'rgba(255,255,255,0.5)'};cursor:pointer;font-size:10px;letter-spacing:1px;font-family:'Montserrat',sans-serif;transition:all 0.2s;`;
+    btn.onclick = () => {
+      const isActive = btn.style.background.includes('rgb(201');
+      btn.style.background = isActive ? 'rgba(255,255,255,0.05)' : 'var(--dorado)';
+      btn.style.color = isActive ? 'rgba(255,255,255,0.5)' : 'var(--negro)';
+    };
+    cont.appendChild(btn);
+  });
+
+  if (conf.apertura) document.getElementById('configApertura').value = conf.apertura;
+  if (conf.cierre)   document.getElementById('configCierre').value   = conf.cierre;
+}
+
+function guardarDias() {
+  const btns = document.querySelectorAll('#diasLaborales button');
+  const activos = [];
+  btns.forEach(b => { if (b.style.background.includes('rgb(201')) activos.push(Number(b.dataset.idx)); });
+  const conf = getConf(); conf.diasActivos = activos; saveConf(conf);
+  toast('Días laborales guardados');
+}
+
+function guardarHorario() {
+  const ap = document.getElementById('configApertura').value;
+  const ci = document.getElementById('configCierre').value;
+  if (!ap || !ci) { alert('Selecciona apertura y cierre'); return; }
+  if (ap >= ci) { alert('La apertura debe ser antes del cierre'); return; }
+  const conf = getConf(); conf.apertura = ap; conf.cierre = ci; saveConf(conf);
+  toast('Horario guardado');
+}
+
+function cambiarPassword() {
+  const actual   = document.getElementById('passActual').value;
+  const nueva    = document.getElementById('passNueva').value;
+  const confirma = document.getElementById('passConfirm').value;
+  if (actual !== getPass())   { alert('La contraseña actual es incorrecta'); return; }
+  if (nueva.length < 6)       { alert('La nueva contraseña debe tener al menos 6 caracteres'); return; }
+  if (nueva !== confirma)     { alert('Las contraseñas no coinciden'); return; }
+  localStorage.setItem(PASS_KEY, nueva);
+  document.getElementById('passActual').value  = '';
+  document.getElementById('passNueva').value   = '';
+  document.getElementById('passConfirm').value = '';
+  toast('Contraseña actualizada correctamente');
+}
+
+// ══════════════════════════════════════════
+//  EXPORTAR CSV
+// ══════════════════════════════════════════
+function exportarCSV() {
+  const citas = getCitas();
+  if (!citas.length) { alert('No hay citas para exportar'); return; }
+  let csv = 'Nombre,Teléfono,Servicio,Fecha,Hora,Estado,Notas\n';
+  citas.forEach(c => {
+    csv += `"${c.nombre}","${c.telefono||''}","${c.servicio}","${c.fecha}","${c.hora}","${c.estado}","${c.notas||''}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'citas-sattra.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = '✦  ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>
