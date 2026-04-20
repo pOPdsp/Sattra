@@ -765,41 +765,59 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 // ══════════════════════════════════════════
 //  BLOQUEOS
 // ══════════════════════════════════════════
-function bloquearDia() {
+async function bloquearDia() {
   const dia    = document.getElementById('bloquearDia').value;
   const motivo = document.getElementById('motivoDia').value;
   if (!dia) { alert('Selecciona una fecha'); return; }
-  const dias = getDiasBloq();
-  if (dias.find(d => d.fecha === dia)) { alert('Ese día ya está bloqueado'); return; }
-  dias.push({ fecha: dia, motivo: motivo || 'Sin motivo' });
-  saveDiasBloq(dias);
-  document.getElementById('bloquearDia').value = '';
-  document.getElementById('motivoDia').value   = '';
-  renderBloqueos();
+
+  const id = Date.now().toString();
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'bloquearDia', id, fecha: dia, motivo: motivo || 'Sin motivo' })
+  });
+  const data = await res.json();
+  if (!data.ok) { alert('Error al bloquear: ' + data.mensaje); return; }
+
+  document.getElementById('bloquearDia').value  = '';
+  document.getElementById('motivoDia').value    = '';
+  await renderBloqueos();
   toast('Día bloqueado');
 }
 
-function bloquearHora() {
+async function bloquearHora() {
   const fecha  = document.getElementById('bloquearFechaHora').value;
   const ini    = document.getElementById('bloquearHoraInicio').value;
   const fin    = document.getElementById('bloquearHoraFin').value;
   const motivo = document.getElementById('motivoHora').value;
   if (!fecha || !ini || !fin) { alert('Completa todos los campos'); return; }
   if (ini >= fin) { alert('La hora de inicio debe ser anterior a la de fin'); return; }
-  const horas = getHorasBloq();
-  horas.push({ id: Date.now().toString(), fecha, ini, fin, motivo: motivo || 'Sin motivo' });
-  saveHorasBloq(horas);
+
+  const id = Date.now().toString();
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'bloquearHora', id, fecha, ini, fin, motivo: motivo || 'Sin motivo' })
+  });
+  const data = await res.json();
+  if (!data.ok) { alert('Error al bloquear: ' + data.mensaje); return; }
+
   document.getElementById('bloquearFechaHora').value  = '';
   document.getElementById('bloquearHoraInicio').value = '';
   document.getElementById('bloquearHoraFin').value    = '';
   document.getElementById('motivoHora').value         = '';
-  renderBloqueos();
+  await renderBloqueos();
   toast('Horario bloqueado');
 }
 
-function renderBloqueos() {
-  const dias  = getDiasBloq();
-  const horas = getHorasBloq();
+async function renderBloqueos() {
+  const res  = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'getBloqueos' })
+  });
+  const data = await res.json();
+  const bloqueos = data.ok ? data.bloqueos : [];
+
+  const dias  = bloqueos.filter(b => b.tipo === 'dia');
+  const horas = bloqueos.filter(b => b.tipo === 'hora');
 
   const ld = document.getElementById('listaDias');
   ld.innerHTML = dias.length
@@ -809,7 +827,7 @@ function renderBloqueos() {
     const el = document.createElement('div');
     el.className = 'blocked-item';
     el.innerHTML = `<span>📅 ${formatFecha(d.fecha)} — ${d.motivo}</span>
-      <button class="btn-remove-block" onclick="desbloquearDia('${d.fecha}')">✕</button>`;
+      <button class="btn-remove-block" onclick="desbloquearBloqueo('${d.id}')">✕</button>`;
     ld.appendChild(el);
   });
 
@@ -821,18 +839,19 @@ function renderBloqueos() {
     const el = document.createElement('div');
     el.className = 'blocked-item';
     el.innerHTML = `<span>🕐 ${formatFecha(h.fecha)} ${h.ini}–${h.fin} — ${h.motivo}</span>
-      <button class="btn-remove-block" onclick="desbloquearHora('${h.id}')">✕</button>`;
+      <button class="btn-remove-block" onclick="desbloquearBloqueo('${h.id}')">✕</button>`;
     lh.appendChild(el);
   });
 }
 
-function desbloquearDia(fecha) {
-  saveDiasBloq(getDiasBloq().filter(d => d.fecha !== fecha));
-  renderBloqueos(); toast('Día desbloqueado');
-}
-function desbloquearHora(id) {
-  saveHorasBloq(getHorasBloq().filter(h => h.id !== id));
-  renderBloqueos(); toast('Horario desbloqueado');
+async function desbloquearBloqueo(id) {
+  const res  = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'borrarBloqueo', id })
+  });
+  const data = await res.json();
+  await renderBloqueos();
+  toast(data.ok ? 'Bloqueo eliminado' : 'Error al eliminar');
 }
 
 // ══════════════════════════════════════════
