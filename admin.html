@@ -869,11 +869,13 @@ function initConfig() {
     const btn = document.createElement('button');
     btn.textContent = d;
     btn.dataset.idx = i;
-    btn.style.cssText = `padding:8px 16px;border:1px solid var(--borde);background:${activo ? 'var(--dorado)' : 'rgba(255,255,255,0.05)'};color:${activo ? 'var(--negro)' : 'rgba(255,255,255,0.5)'};cursor:pointer;font-size:10px;letter-spacing:1px;font-family:'Montserrat',sans-serif;transition:all 0.2s;`;
+    btn.dataset.active = activo ? '1' : '0';
+    btn.style.cssText = `padding:8px 16px;border:1px solid var(--borde);background:${activo ? '#569F96' : 'rgba(255,255,255,0.05)'};color:${activo ? '#fff' : 'rgba(255,255,255,0.5)'};cursor:pointer;font-size:10px;letter-spacing:1px;font-family:'Montserrat',sans-serif;transition:all 0.2s;`;
     btn.onclick = () => {
-      const isActive = btn.style.background.includes('rgb(201');
-      btn.style.background = isActive ? 'rgba(255,255,255,0.05)' : 'var(--dorado)';
-      btn.style.color      = isActive ? 'rgba(255,255,255,0.5)'  : 'var(--negro)';
+      const isActive = btn.dataset.active === '1';
+      btn.dataset.active = isActive ? '0' : '1';
+      btn.style.background = isActive ? 'rgba(255,255,255,0.05)' : '#569F96';
+      btn.style.color      = isActive ? 'rgba(255,255,255,0.5)'  : '#fff';
     };
     cont.appendChild(btn);
   });
@@ -884,7 +886,7 @@ function initConfig() {
 function guardarDias() {
   const btns = document.querySelectorAll('#diasLaborales button');
   const activos = [];
-  btns.forEach(b => { if (b.style.background.includes('rgb(201')) activos.push(Number(b.dataset.idx)); });
+  btns.forEach(b => { if (b.dataset.active === '1') activos.push(Number(b.dataset.idx)); });
   const conf = getConf(); conf.diasActivos = activos; saveConf(conf);
   toast('Días laborales guardados');
 }
