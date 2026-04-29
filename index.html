@@ -7,6 +7,95 @@
   <meta name="description" content="SATTRA Centro de Estética Avanzada. Depilación permanente, Hidrafacial, Láser antiedad y más. Bagaces, Guanacaste." />
   <link rel="stylesheet" href="css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ══════════════════════════════════════
+       BOTÓN FLOTANTE WHATSAPP
+    ══════════════════════════════════════ */
+    .whatsapp-float {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      animation: waBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .whatsapp-float:hover .wa-label {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .wa-label {
+      background: #1A1A1A;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border: 1px solid rgba(86,159,150,0.3);
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .wa-btn {
+      width: 56px;
+      height: 56px;
+      background: #25d366;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.45);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .wa-btn svg {
+      width: 28px;
+      height: 28px;
+      fill: #fff;
+    }
+
+    .whatsapp-float:hover .wa-btn {
+      transform: scale(1.1);
+      box-shadow: 0 6px 28px rgba(37, 211, 102, 0.6);
+    }
+
+    /* Pulso animado alrededor del botón */
+    .wa-btn::before {
+      content: '';
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(37, 211, 102, 0.35);
+      animation: waPulse 2.2s ease-out infinite;
+    }
+
+    @keyframes waPulse {
+      0%   { transform: scale(1);   opacity: 0.7; }
+      100% { transform: scale(2);   opacity: 0; }
+    }
+
+    @keyframes waBounceIn {
+      from { opacity: 0; transform: scale(0.5) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .whatsapp-float { bottom: 20px; right: 20px; }
+      .wa-label { display: none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -217,6 +306,25 @@
   <footer class="footer">
     <p>© 2025 <span>SÄTTRA</span> · Centro de Estética Avanzada · Bagaces, Guanacaste</p>
   </footer>
+
+  <!-- ══════════════════════════════════════
+       BOTÓN FLOTANTE WHATSAPP
+  ══════════════════════════════════════ -->
+  <a
+    class="whatsapp-float"
+    href="https://wa.me/50686727070?text=Hola%20SÄTTRA%20👋%2C%20me%20gustaría%20obtener%20más%20información%20sobre%20sus%20servicios."
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Contactar por WhatsApp"
+  >
+    <span class="wa-label">Escríbenos</span>
+    <span class="wa-btn">
+      <!-- Ícono oficial de WhatsApp en SVG -->
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 .5C7.439.5.5 7.439.5 16c0 2.777.726 5.42 2.103 7.745L.5 31.5l8.02-2.073A15.44 15.44 0 0 0 16 31.5C24.561 31.5 31.5 24.561 31.5 16S24.561.5 16 .5zm0 28.222a13.7 13.7 0 0 1-6.979-1.907l-.5-.298-5.184 1.339 1.373-4.999-.327-.514A13.676 13.676 0 0 1 2.278 16C2.278 8.418 8.418 2.278 16 2.278S29.722 8.418 29.722 16 23.582 28.722 16 28.722zm7.51-10.252c-.412-.206-2.437-1.2-2.814-1.337-.377-.137-.651-.206-.925.206s-1.062 1.337-1.302 1.611c-.24.274-.48.309-.892.103-.412-.206-1.739-.641-3.312-2.043-1.224-1.09-2.05-2.436-2.29-2.848-.24-.412-.026-.635.18-.84.185-.184.412-.48.618-.72.206-.24.274-.412.412-.686.137-.274.069-.515-.034-.72-.103-.206-.925-2.23-1.268-3.054-.334-.801-.673-.692-.925-.705l-.788-.013c-.274 0-.72.103-1.097.515-.377.412-1.44 1.406-1.44 3.43s1.474 3.978 1.68 4.252c.206.274 2.9 4.43 7.027 6.208.982.424 1.748.677 2.346.867.986.314 1.883.27 2.592.164.791-.118 2.437-.996 2.78-1.958.343-.961.343-1.786.24-1.958-.103-.172-.377-.275-.788-.48z"/>
+      </svg>
+    </span>
+  </a>
 
   <script src="js/main.js"></script>
 </body>

@@ -72,8 +72,8 @@ if (form) {
         form.reset();
         if (fechaInput) fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
       } else {
-  alert(data.mensaje || 'Error al guardar la cita. Intenta nuevamente.');
-}
+        alert(data.mensaje || 'Error al guardar la cita. Intenta nuevamente.');
+      }
     } catch (err) {
       console.error(err);
       alert('Error de conexión. Verifica tu internet e intenta nuevamente.');

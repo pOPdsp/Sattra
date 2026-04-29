@@ -7,18 +7,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-  --dorado: #569F96;
-  --dorado-claro: #A1C9C4;
-  --dorado-oscuro: #3D7870;
-  --negro: #1A1A1A;
-  --negro2: #242424;
-  --blanco: #FFFFFF;
-  --gris: #888;
-  --borde: rgba(86,159,150,0.2);
-  --rojo: #c0392b;
-  --verde: #27ae60;
-}
+      --dorado: #569F96;
+      --dorado-claro: #A1C9C4;
+      --dorado-oscuro: #3D7870;
+      --negro: #1A1A1A;
+      --negro2: #242424;
+      --blanco: #FFFFFF;
+      --gris: #888;
+      --borde: rgba(86,159,150,0.2);
+      --rojo: #c0392b;
+      --verde: #27ae60;
+    }
+
     body { font-family: 'Montserrat', sans-serif; background: var(--negro); color: var(--blanco); min-height: 100vh; }
 
     /* ── LOGIN ── */
@@ -91,7 +93,7 @@
     }
     .sidebar-item:hover, .sidebar-item.active {
       color: var(--dorado); border-left-color: var(--dorado);
-      background: rgba(201,168,76,0.05);
+      background: rgba(86,159,150,0.05);
     }
     .sidebar-section {
       font-size: 8px; letter-spacing: 3px; color: var(--gris);
@@ -133,16 +135,17 @@
       text-transform: uppercase; color: var(--dorado);
       padding: 10px 14px; border-bottom: 1px solid var(--borde);
     }
-    td { padding: 12px 14px; border-bottom: 1px solid rgba(201,168,76,0.08); color: rgba(255,255,255,0.8); vertical-align: middle; }
-    tr:hover td { background: rgba(201,168,76,0.04); }
+    td { padding: 12px 14px; border-bottom: 1px solid rgba(86,159,150,0.08); color: rgba(255,255,255,0.8); vertical-align: middle; }
+    tr:hover td { background: rgba(86,159,150,0.04); }
     .badge {
       display: inline-block; padding: 3px 10px;
       font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
       border-radius: 2px;
     }
     .badge-confirmada { background: rgba(39,174,96,0.15); color: #2ecc71; border: 1px solid rgba(39,174,96,0.3); }
-    .badge-pendiente { background: rgba(201,168,76,0.15); color: var(--dorado); border: 1px solid var(--borde); }
-    .badge-cancelada { background: rgba(192,57,43,0.15); color: #e74c3c; border: 1px solid rgba(192,57,43,0.3); }
+    .badge-pendiente  { background: rgba(86,159,150,0.15); color: var(--dorado); border: 1px solid var(--borde); }
+    .badge-cancelada  { background: rgba(192,57,43,0.15); color: #e74c3c; border: 1px solid rgba(192,57,43,0.3); }
+
     .btn-icon {
       background: none; border: 1px solid var(--borde); color: var(--dorado);
       padding: 5px 10px; cursor: pointer; font-size: 11px;
@@ -151,6 +154,11 @@
     .btn-icon:hover { background: var(--dorado); color: var(--negro); }
     .btn-icon.danger { border-color: rgba(192,57,43,0.4); color: #e74c3c; }
     .btn-icon.danger:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+    /* ── WHATSAPP BUTTON ── */
+    .btn-icon.whatsapp { border-color: rgba(37,211,102,0.4); color: #25d366; }
+    .btn-icon.whatsapp:hover { background: #25d366; color: #fff; border-color: #25d366; }
+
     .empty-state { text-align: center; padding: 48px; color: var(--gris); font-size: 12px; letter-spacing: 1px; }
 
     /* MODAL */
@@ -208,7 +216,7 @@
     .blocked-list { margin-top: 16px; }
     .blocked-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 12px; background: rgba(201,168,76,0.05);
+      padding: 8px 12px; background: rgba(86,159,150,0.05);
       border: 1px solid var(--borde); margin-bottom: 6px; font-size: 11px;
     }
     .blocked-item span { color: rgba(255,255,255,0.7); }
@@ -282,10 +290,10 @@
     <!-- SIDEBAR -->
     <nav class="sidebar">
       <div class="sidebar-section">Gestión</div>
-      <a class="sidebar-item active" onclick="showTab('citas')">📋 Citas</a>
-      <a class="sidebar-item" onclick="showTab('bloqueos')">🔒 Bloqueos</a>
+      <a class="sidebar-item active" onclick="showTab('citas', event)">📋 Citas</a>
+      <a class="sidebar-item" onclick="showTab('bloqueos', event)">🔒 Bloqueos</a>
       <div class="sidebar-section">Sistema</div>
-      <a class="sidebar-item" onclick="showTab('config')">⚙ Configuración</a>
+      <a class="sidebar-item" onclick="showTab('config', event)">⚙ Configuración</a>
       <a href="index.html" class="sidebar-item">← Sitio web</a>
     </nav>
 
@@ -510,13 +518,13 @@ for (let h = 8; h <= 20; h++) {
 // ══════════════════════════════════════════
 //  STORAGE LOCAL (bloqueos, config, pass)
 // ══════════════════════════════════════════
-const getPass      = ()  => localStorage.getItem(PASS_KEY) || DEFAULT_PASS;
-const getDiasBloq  = ()  => JSON.parse(localStorage.getItem(DIAS_KEY)  || '[]');
-const saveDiasBloq = (d) => localStorage.setItem(DIAS_KEY,  JSON.stringify(d));
-const getHorasBloq = ()  => JSON.parse(localStorage.getItem(HORAS_KEY) || '[]');
-const saveHorasBloq= (h) => localStorage.setItem(HORAS_KEY, JSON.stringify(h));
-const getConf      = ()  => JSON.parse(localStorage.getItem(CONF_KEY)  || '{}');
-const saveConf     = (c) => localStorage.setItem(CONF_KEY,  JSON.stringify(c));
+const getPass       = ()  => localStorage.getItem(PASS_KEY)  || DEFAULT_PASS;
+const getDiasBloq   = ()  => JSON.parse(localStorage.getItem(DIAS_KEY)   || '[]');
+const saveDiasBloq  = (d) => localStorage.setItem(DIAS_KEY,   JSON.stringify(d));
+const getHorasBloq  = ()  => JSON.parse(localStorage.getItem(HORAS_KEY)  || '[]');
+const saveHorasBloq = (h) => localStorage.setItem(HORAS_KEY,  JSON.stringify(h));
+const getConf       = ()  => JSON.parse(localStorage.getItem(CONF_KEY)   || '{}');
+const saveConf      = (c) => localStorage.setItem(CONF_KEY,   JSON.stringify(c));
 
 // ══════════════════════════════════════════
 //  API GOOGLE SHEETS
@@ -618,18 +626,16 @@ function rellenarFiltroServicios() {
 // ══════════════════════════════════════════
 //  TABS
 // ══════════════════════════════════════════
-function showTab(name) {
+function showTab(name, e) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  if (e && e.currentTarget) e.currentTarget.classList.add('active');
 }
 
 // ══════════════════════════════════════════
 //  RENDER CITAS
 // ══════════════════════════════════════════
-
-// Variable global para citas en memoria (usada por abrirEditar y exportarCSV)
 let citasEnMemoria = [];
 
 async function renderCitas() {
@@ -675,6 +681,7 @@ async function renderCitas() {
         <td><span class="badge ${badgeClass}">${c.estado}</span></td>
         <td>
           <button class="btn-icon" onclick="abrirEditar('${c.id}')">✏ Editar</button>
+          <button class="btn-icon whatsapp" onclick="abrirWhatsApp('${c.id}')">💬 WhatsApp</button>
           <button class="btn-icon danger" onclick="abrirBorrar('${c.id}')">✕ Borrar</button>
         </td>`;
       body.appendChild(tr);
@@ -707,7 +714,6 @@ function formatFecha(f) {
 let citaEditandoId = null;
 
 function abrirEditar(id) {
-  // Usa la variable en memoria — ya no llama a getCitas()
   const cita = citasEnMemoria.find(c => c.id === id);
   if (!cita) return;
   citaEditandoId = id;
@@ -763,6 +769,35 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ══════════════════════════════════════════
+//  WHATSAPP
+// ══════════════════════════════════════════
+function abrirWhatsApp(id) {
+  const cita = citasEnMemoria.find(c => c.id === id);
+  if (!cita) return;
+
+  let numero = (cita.telefono || '').replace(/[\s\-\(\)]/g, '');
+
+  // Si no tiene código de país, agrega +506 (Costa Rica)
+  if (!numero.startsWith('+') && !numero.startsWith('506')) {
+    numero = '506' + numero;
+  }
+  numero = numero.replace('+', '');
+
+  const fecha = formatFecha(cita.fecha);
+  const mensaje = encodeURIComponent(
+    `Hola ${cita.nombre} 👋, te escribimos de SÄTTRA Centro de Estética.\n\n` +
+    `✅ Tu cita ha sido *confirmada*:\n` +
+    `📋 Servicio: ${cita.servicio}\n` +
+    `📅 Fecha: ${fecha}\n` +
+    `🕐 Hora: ${cita.hora}\n\n` +
+    `Te esperamos en Bagaces, 250 m este del Banco BCR.\n` +
+    `Cualquier consulta, estamos aquí. ¡Hasta pronto! ✨`
+  );
+
+  window.open(`https://wa.me/${numero}?text=${mensaje}`, '_blank');
+}
+
+// ══════════════════════════════════════════
 //  BLOQUEOS
 // ══════════════════════════════════════════
 async function bloquearDia() {
@@ -778,8 +813,8 @@ async function bloquearDia() {
   const data = await res.json();
   if (!data.ok) { alert('Error al bloquear: ' + data.mensaje); return; }
 
-  document.getElementById('bloquearDia').value  = '';
-  document.getElementById('motivoDia').value    = '';
+  document.getElementById('bloquearDia').value = '';
+  document.getElementById('motivoDia').value   = '';
   await renderBloqueos();
   toast('Día bloqueado');
 }
@@ -809,39 +844,43 @@ async function bloquearHora() {
 }
 
 async function renderBloqueos() {
-  const res  = await fetch(API_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'getBloqueos' })
-  });
-  const data = await res.json();
-  const bloqueos = data.ok ? data.bloqueos : [];
+  try {
+    const res  = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getBloqueos' })
+    });
+    const data = await res.json();
+    const bloqueos = data.ok ? data.bloqueos : [];
 
-  const dias  = bloqueos.filter(b => b.tipo === 'dia');
-  const horas = bloqueos.filter(b => b.tipo === 'hora');
+    const dias  = bloqueos.filter(b => b.tipo === 'dia');
+    const horas = bloqueos.filter(b => b.tipo === 'hora');
 
-  const ld = document.getElementById('listaDias');
-  ld.innerHTML = dias.length
-    ? ''
-    : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin días bloqueados.</p>';
-  dias.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'blocked-item';
-    el.innerHTML = `<span>📅 ${formatFecha(d.fecha)} — ${d.motivo}</span>
-      <button class="btn-remove-block" onclick="desbloquearBloqueo('${d.id}')">✕</button>`;
-    ld.appendChild(el);
-  });
+    const ld = document.getElementById('listaDias');
+    ld.innerHTML = dias.length
+      ? ''
+      : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin días bloqueados.</p>';
+    dias.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'blocked-item';
+      el.innerHTML = `<span>📅 ${formatFecha(d.fecha)} — ${d.motivo}</span>
+        <button class="btn-remove-block" onclick="desbloquearBloqueo('${d.id}')">✕</button>`;
+      ld.appendChild(el);
+    });
 
-  const lh = document.getElementById('listaHoras');
-  lh.innerHTML = horas.length
-    ? ''
-    : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin horarios bloqueados.</p>';
-  horas.sort((a,b) => (a.fecha+a.ini).localeCompare(b.fecha+b.ini)).forEach(h => {
-    const el = document.createElement('div');
-    el.className = 'blocked-item';
-    el.innerHTML = `<span>🕐 ${formatFecha(h.fecha)} ${h.ini}–${h.fin} — ${h.motivo}</span>
-      <button class="btn-remove-block" onclick="desbloquearBloqueo('${h.id}')">✕</button>`;
-    lh.appendChild(el);
-  });
+    const lh = document.getElementById('listaHoras');
+    lh.innerHTML = horas.length
+      ? ''
+      : '<p style="font-size:11px;color:var(--gris);margin-top:12px;">Sin horarios bloqueados.</p>';
+    horas.sort((a,b) => (a.fecha+a.ini).localeCompare(b.fecha+b.ini)).forEach(h => {
+      const el = document.createElement('div');
+      el.className = 'blocked-item';
+      el.innerHTML = `<span>🕐 ${formatFecha(h.fecha)} ${h.ini}–${h.fin} — ${h.motivo}</span>
+        <button class="btn-remove-block" onclick="desbloquearBloqueo('${h.id}')">✕</button>`;
+      lh.appendChild(el);
+    });
+  } catch(e) {
+    console.error('Error cargando bloqueos:', e);
+  }
 }
 
 async function desbloquearBloqueo(id) {
@@ -904,9 +943,9 @@ function cambiarPassword() {
   const actual   = document.getElementById('passActual').value;
   const nueva    = document.getElementById('passNueva').value;
   const confirma = document.getElementById('passConfirm').value;
-  if (actual !== getPass())  { alert('La contraseña actual es incorrecta'); return; }
-  if (nueva.length < 6)      { alert('La nueva contraseña debe tener al menos 6 caracteres'); return; }
-  if (nueva !== confirma)    { alert('Las contraseñas no coinciden'); return; }
+  if (actual !== getPass()) { alert('La contraseña actual es incorrecta'); return; }
+  if (nueva.length < 6)     { alert('La nueva contraseña debe tener al menos 6 caracteres'); return; }
+  if (nueva !== confirma)   { alert('Las contraseñas no coinciden'); return; }
   localStorage.setItem(PASS_KEY, nueva);
   document.getElementById('passActual').value  = '';
   document.getElementById('passNueva').value   = '';
@@ -915,7 +954,7 @@ function cambiarPassword() {
 }
 
 // ══════════════════════════════════════════
-//  EXPORTAR CSV  ← ahora usa citasEnMemoria
+//  EXPORTAR CSV
 // ══════════════════════════════════════════
 function exportarCSV() {
   if (!citasEnMemoria.length) { alert('No hay citas para exportar'); return; }
