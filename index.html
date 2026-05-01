@@ -3,12 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SATTRA | Centro de Estética Avanzada</title>
+  <title>SÄTTRA | Centro de Estética Avanzada</title>
   <meta name="description" content="SATTRA Centro de Estética Avanzada. Depilación permanente, Hidrafacial, Láser antiedad y más. Bagaces, Guanacaste." />
   <link rel="stylesheet" href="css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
+    /* ══════════════════════════════════════
+       HERO CON IMAGEN DE FONDO
+    ══════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      background:
+        linear-gradient(
+          to bottom,
+          rgba(26,26,26,0.50) 0%,
+          rgba(26,26,26,0.65) 55%,
+          rgba(26,26,26,0.92) 100%
+        ),
+        url('https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=1800&q=80&auto=format&fit=crop')
+        center center / cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 20px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before { display: none; }
+
+    /* ══════════════════════════════════════
+       TARJETAS DE SERVICIOS CON IMAGEN
+    ══════════════════════════════════════ */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+      background: var(--borde);
+      border: 1px solid var(--borde);
+    }
+
+    .service-card {
+      background: var(--blanco);
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      padding: 0;
+      text-align: left;
+      transition: none;
+    }
+
+    .service-card-img-wrap {
+      overflow: hidden;
+      position: relative;
+      height: 210px;
+    }
+    .service-card-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 45%, rgba(26,26,26,0.15) 100%);
+      pointer-events: none;
+    }
+
+    .service-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      filter: grayscale(8%);
+      transition: transform 0.55s ease, filter 0.55s ease;
+    }
+
+    .service-card:hover .service-card-img {
+      transform: scale(1.07);
+      filter: grayscale(0%);
+    }
+
+    .service-card-body {
+      padding: 20px 22px 24px;
+      border-top: 2px solid var(--borde);
+      background: var(--blanco);
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .service-card:hover .service-card-body {
+      background: var(--negro);
+      border-color: var(--principal);
+    }
+    .service-card:hover .service-card-body h3   { color: var(--claro); }
+    .service-card:hover .service-card-body p    { color: rgba(255,255,255,0.55); }
+    .service-card:hover .service-card-body .service-icon { color: var(--claro); }
+
+    .service-card-body .service-icon {
+      font-size: 15px;
+      color: var(--principal);
+      margin-bottom: 9px;
+      display: block;
+      transition: color 0.3s;
+    }
+    .service-card-body h3 {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--negro);
+      margin-bottom: 7px;
+      transition: color 0.3s;
+    }
+    .service-card-body p {
+      font-size: 12px;
+      color: var(--gris);
+      line-height: 1.8;
+      transition: color 0.3s;
+    }
+
     /* ══════════════════════════════════════
        BOTÓN FLOTANTE WHATSAPP
     ══════════════════════════════════════ */
@@ -23,13 +134,11 @@
       text-decoration: none;
       animation: waBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
-
     .whatsapp-float:hover .wa-label {
       opacity: 1;
       transform: translateX(0);
       pointer-events: auto;
     }
-
     .wa-label {
       background: #1A1A1A;
       color: #fff;
@@ -45,7 +154,6 @@
       transition: opacity 0.3s ease, transform 0.3s ease;
       pointer-events: none;
     }
-
     .wa-btn {
       width: 56px;
       height: 56px;
@@ -54,64 +162,55 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.45);
+      box-shadow: 0 4px 20px rgba(37,211,102,0.45);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       flex-shrink: 0;
+      position: relative;
     }
-
-    .wa-btn svg {
-      width: 28px;
-      height: 28px;
-      fill: #fff;
-    }
-
+    .wa-btn svg { width: 28px; height: 28px; fill: #fff; }
     .whatsapp-float:hover .wa-btn {
       transform: scale(1.1);
-      box-shadow: 0 6px 28px rgba(37, 211, 102, 0.6);
+      box-shadow: 0 6px 28px rgba(37,211,102,0.6);
     }
-
-    /* Pulso animado alrededor del botón */
     .wa-btn::before {
       content: '';
       position: absolute;
-      width: 56px;
-      height: 56px;
+      width: 56px; height: 56px;
       border-radius: 50%;
-      background: rgba(37, 211, 102, 0.35);
+      background: rgba(37,211,102,0.35);
       animation: waPulse 2.2s ease-out infinite;
     }
-
     @keyframes waPulse {
-      0%   { transform: scale(1);   opacity: 0.7; }
-      100% { transform: scale(2);   opacity: 0; }
+      0%   { transform: scale(1); opacity: 0.7; }
+      100% { transform: scale(2); opacity: 0; }
     }
-
     @keyframes waBounceIn {
       from { opacity: 0; transform: scale(0.5) translateY(20px); }
       to   { opacity: 1; transform: scale(1) translateY(0); }
     }
-
     @media (max-width: 480px) {
       .whatsapp-float { bottom: 20px; right: 20px; }
       .wa-label { display: none; }
+      .services-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
- <nav class="navbar">
-  <div class="nav-logo">
-  <img src="img/logo-sattra.png" alt="SÄTTRA" class="nav-logo-img" />
-</div>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="#inicio">Inicio</a></li>
-    <li><a href="#servicios">Servicios</a></li>
-    <li><a href="#citas">Reservar</a></li>
-    <li><a href="#contacto">Contacto</a></li>
-    <li><a href="admin.html" class="nav-admin-link">&#9776; Admin</a></li>
-  </ul>
-  <button class="hamburger" id="hamburger">&#9776;</button>
-</nav>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-logo">
+      <img src="img/logo-sattra.png" alt="SÄTTRA" class="nav-logo-img" />
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#inicio">Inicio</a></li>
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#citas">Reservar</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+      <li><a href="admin.html" class="nav-admin-link">&#9776; Admin</a></li>
+    </ul>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
 
   <!-- HERO -->
   <section class="hero" id="inicio">
@@ -131,68 +230,156 @@
       <p class="section-eyebrow">Lo que ofrecemos</p>
       <h2 class="section-title">Nuestros Servicios</h2>
       <div class="divider-gold centered"></div>
+
       <div class="services-grid">
+
+        <!-- 1. Depilación Permanente -->
         <div class="service-card">
-          <span class="service-icon">✦</span>
-          <h3>Depilación Permanente</h3>
-          <p>Elimina el vello de forma definitiva con tecnología láser de última generación.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/depilacion_lacer.jpg" alt="Depilación Permanente" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">✦</span>
+            <h3>Depilación Permanente</h3>
+            <p>Elimina el vello de forma definitiva con tecnología láser de última generación.</p>
+          </div>
         </div>
+
+        <!-- 2. Hidrafacial -->
         <div class="service-card">
-          <span class="service-icon">◈</span>
-          <h3>Hidrafacial</h3>
-          <p>Tratamiento facial y corporal con hidratación intensiva y limpieza profunda.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/hidrafacial.png" alt="Hidrafacial" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◈</span>
+            <h3>Hidrafacial</h3>
+            <p>Tratamiento facial y corporal con hidratación intensiva y limpieza profunda.</p>
+          </div>
         </div>
+
+        <!-- 3. Láser Antiedad -->
         <div class="service-card">
-          <span class="service-icon">◉</span>
-          <h3>Láser Antiedad</h3>
-          <p>Rejuvenecimiento cutáneo para reducir arrugas y manchas de forma efectiva.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/laser_antiedad.jpg" alt="Láser Antiedad" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◉</span>
+            <h3>Láser Antiedad</h3>
+            <p>Rejuvenecimiento cutáneo para reducir arrugas y manchas de forma efectiva.</p>
+          </div>
         </div>
+
+        <!-- 4. Microagujas -->
         <div class="service-card">
-          <span class="service-icon">◎</span>
-          <h3>Microagujas</h3>
-          <p>Estimulación natural del colágeno para piel firme, lisa y radiante.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/micro_agujas.webp" alt="Microagujas" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◎</span>
+            <h3>Microagujas</h3>
+            <p>Estimulación natural del colágeno para piel firme, lisa y radiante.</p>
+          </div>
         </div>
+
+        <!-- 5. Hollywood Peel -->
         <div class="service-card">
-          <span class="service-icon">✧</span>
-          <h3>Hollywood Peel</h3>
-          <p>El tratamiento favorito de las celebridades. Piel luminosa en una sola sesión.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/holiwood_peel.jpeg" alt="Hollywood Peel" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">✧</span>
+            <h3>Hollywood Peel</h3>
+            <p>El tratamiento favorito de las celebridades. Piel luminosa en una sola sesión.</p>
+          </div>
         </div>
+
+        <!-- 6. Radiofrecuencia Tripolar -->
         <div class="service-card">
-          <span class="service-icon">◐</span>
-          <h3>Radiofrecuencia Tripolar</h3>
-          <p>Reafirma y modela el cuerpo con energía de triple acción no invasiva.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/Radiofrecuencia-tripolar.jpg" alt="Radiofrecuencia Tripolar" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◐</span>
+            <h3>Radiofrecuencia Tripolar</h3>
+            <p>Reafirma y modela el cuerpo con energía de triple acción no invasiva.</p>
+          </div>
         </div>
+
+        <!-- 7. Cromoterapia -->
         <div class="service-card">
-          <span class="service-icon">◑</span>
-          <h3>Cromoterapia</h3>
-          <p>Terapia de luz y color para equilibrar el cuerpo, la mente y las emociones.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/cromoterapia.jpg" alt="Cromoterapia" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◑</span>
+            <h3>Cromoterapia</h3>
+            <p>Terapia de luz y color para equilibrar el cuerpo, la mente y las emociones.</p>
+          </div>
         </div>
+
+        <!-- 8. Lipolaser -->
         <div class="service-card">
-          <span class="service-icon">◒</span>
-          <h3>Lipolaser</h3>
-          <p>Reducción localizada de grasa con láser no invasivo y sin dolor.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/lipolaser.jpg" alt="Lipolaser" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◒</span>
+            <h3>Lipolaser</h3>
+            <p>Reducción localizada de grasa con láser no invasivo y sin dolor.</p>
+          </div>
         </div>
+
+        <!-- 9. Gimnasia Pasiva -->
         <div class="service-card">
-          <span class="service-icon">◓</span>
-          <h3>Gimnasia Pasiva</h3>
-          <p>Tonificación muscular mediante electroestimulación sin esfuerzo físico.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/gimnacia_pasiva.jpg" alt="Gimnasia Pasiva" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◓</span>
+            <h3>Gimnasia Pasiva</h3>
+            <p>Tonificación muscular mediante electroestimulación sin esfuerzo físico.</p>
+          </div>
         </div>
+
+        <!-- 10. Mesoterapia -->
         <div class="service-card">
-          <span class="service-icon">◔</span>
-          <h3>Mesoterapia</h3>
-          <p>Microinyecciones con vitaminas y activos para rejuvenecer piel y reducir grasa.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/mesoterapia.jpg" alt="Mesoterapia" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◔</span>
+            <h3>Mesoterapia</h3>
+            <p>Microinyecciones con vitaminas y activos para rejuvenecer piel y reducir grasa.</p>
+          </div>
         </div>
+
+        <!-- 11. Sueroterapia (imagen Unsplash, no fue subida) -->
         <div class="service-card">
-          <span class="service-icon">◕</span>
-          <h3>Sueroterapia</h3>
-          <p>Sueros vitamínicos personalizados para revitalizar el organismo desde adentro.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img"
+              src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&q=80&auto=format&fit=crop"
+              alt="Sueroterapia" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">◕</span>
+            <h3>Sueroterapia</h3>
+            <p>Sueros vitamínicos personalizados para revitalizar el organismo desde adentro.</p>
+          </div>
         </div>
+
+        <!-- 12. Limpieza Facial -->
         <div class="service-card">
-          <span class="service-icon">✦</span>
-          <h3>Limpieza Facial</h3>
-          <p>Higienización profunda del rostro para eliminar impurezas y renovar la piel.</p>
+          <div class="service-card-img-wrap">
+            <img class="service-card-img" src="img/limpieza_facial.png" alt="Limpieza Facial" loading="lazy" />
+          </div>
+          <div class="service-card-body">
+            <span class="service-icon">✦</span>
+            <h3>Limpieza Facial</h3>
+            <p>Higienización profunda del rostro para eliminar impurezas y renovar la piel.</p>
+          </div>
         </div>
-      </div>
+
+      </div><!-- /services-grid -->
     </div>
   </section>
 
@@ -245,20 +432,7 @@
           <div class="form-group">
             <label for="hora">Hora</label>
             <select id="hora" required>
-              <option value="">Selecciona la hora...</option>
-              <option>08:00</option><option>08:30</option>
-              <option>09:00</option><option>09:30</option>
-              <option>10:00</option><option>10:30</option>
-              <option>11:00</option><option>11:30</option>
-              <option>12:00</option><option>12:30</option>
-              <option>13:00</option><option>13:30</option>
-              <option>14:00</option><option>14:30</option>
-              <option>15:00</option><option>15:30</option>
-              <option>16:00</option><option>16:30</option>
-              <option>17:00</option><option>17:30</option>
-              <option>18:00</option><option>18:30</option>
-              <option>19:00</option><option>19:30</option>
-              <option>20:00</option><option>20:30</option>
+              <option value="">Selecciona primero una fecha</option>
             </select>
           </div>
         </div>
@@ -307,9 +481,7 @@
     <p>© 2025 <span>SÄTTRA</span> · Centro de Estética Avanzada · Bagaces, Guanacaste</p>
   </footer>
 
-  <!-- ══════════════════════════════════════
-       BOTÓN FLOTANTE WHATSAPP
-  ══════════════════════════════════════ -->
+  <!-- BOTÓN FLOTANTE WHATSAPP -->
   <a
     class="whatsapp-float"
     href="https://wa.me/50686727070?text=Hola%20SÄTTRA%20👋%2C%20me%20gustaría%20obtener%20más%20información%20sobre%20sus%20servicios."
@@ -319,7 +491,6 @@
   >
     <span class="wa-label">Escríbenos</span>
     <span class="wa-btn">
-      <!-- Ícono oficial de WhatsApp en SVG -->
       <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
         <path d="M16 .5C7.439.5.5 7.439.5 16c0 2.777.726 5.42 2.103 7.745L.5 31.5l8.02-2.073A15.44 15.44 0 0 0 16 31.5C24.561 31.5 31.5 24.561 31.5 16S24.561.5 16 .5zm0 28.222a13.7 13.7 0 0 1-6.979-1.907l-.5-.298-5.184 1.339 1.373-4.999-.327-.514A13.676 13.676 0 0 1 2.278 16C2.278 8.418 8.418 2.278 16 2.278S29.722 8.418 29.722 16 23.582 28.722 16 28.722zm7.51-10.252c-.412-.206-2.437-1.2-2.814-1.337-.377-.137-.651-.206-.925.206s-1.062 1.337-1.302 1.611c-.24.274-.48.309-.892.103-.412-.206-1.739-.641-3.312-2.043-1.224-1.09-2.05-2.436-2.29-2.848-.24-.412-.026-.635.18-.84.185-.184.412-.48.618-.72.206-.24.274-.412.412-.686.137-.274.069-.515-.034-.72-.103-.206-.925-2.23-1.268-3.054-.334-.801-.673-.692-.925-.705l-.788-.013c-.274 0-.72.103-1.097.515-.377.412-1.44 1.406-1.44 3.43s1.474 3.978 1.68 4.252c.206.274 2.9 4.43 7.027 6.208.982.424 1.748.677 2.346.867.986.314 1.883.27 2.592.164.791-.118 2.437-.996 2.78-1.958.343-.961.343-1.786.24-1.958-.103-.172-.377-.275-.788-.48z"/>
       </svg>
