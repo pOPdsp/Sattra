@@ -143,10 +143,10 @@ if (form) {
     const hora     = document.getElementById('hora')?.value      || '';
     const notas    = (document.getElementById('notas')?.value    || '').trim();
 
-    if (!nombre || !telefono || !servicio || !fecha || !hora) {
-      alert('Por favor completa todos los campos obligatorios.');
-      return;
-    }
+    if (!nombre || !telefono || !email || !servicio || !fecha || !hora) {
+  alert('Por favor completa todos los campos obligatorios, incluyendo el correo electrónico.');
+  return;
+}
 
     // ── Validar que la hora no haya pasado (si es hoy) ──
     const ahora = new Date();
