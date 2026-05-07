@@ -4,25 +4,78 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycby1oymWGkzFVT7ar5NBE8m6koMzFWpV9Pz3o_qGFnXNpMLpLFoUA2dMA7sbqrDDoUvK/exec';
 
 // ══════════════════════════════════════════
+//  HORAS DISPONIBLES
+// ══════════════════════════════════════════
+const TODAS_LAS_HORAS = [
+  '08:00','08:30','09:00','09:30','10:00','10:30',
+  '11:00','11:30','12:00','12:30','13:00','13:30',
+  '14:00','14:30','15:00','15:30','16:00','16:30',
+  '17:00','17:30','18:00','18:30','19:00','19:30',
+  '20:00','20:30'
+];
+
+// ══════════════════════════════════════════
 //  UTILIDADES
 // ══════════════════════════════════════════
 function generarId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
-// Convierte "08:30" → minutos desde medianoche (510)
-function horaAMinutos(hora) {
-  const [h, m] = hora.split(':').map(Number);
+function horaEnMinutos(horaStr) {
+  const [h, m] = horaStr.split(':').map(Number);
   return h * 60 + m;
 }
 
 // ══════════════════════════════════════════
-//  TODAS LAS HORAS POSIBLES (08:00 – 20:30)
+//  ACTUALIZAR HORAS DISPONIBLES
 // ══════════════════════════════════════════
-const TODAS_LAS_HORAS = [];
-for (let h = 8; h <= 20; h++) {
-  TODAS_LAS_HORAS.push(`${String(h).padStart(2, '0')}:00`);
-  if (h < 20) TODAS_LAS_HORAS.push(`${String(h).padStart(2, '0')}:30`);
+function actualizarHorasDisponibles() {
+  const fechaInput = document.getElementById('fecha');
+  const horaSelect = document.getElementById('hora');
+  if (!fechaInput || !horaSelect) return;
+
+  const fechaElegida = fechaInput.value;
+  if (!fechaElegida) {
+    // Si no hay fecha, mostrar todas
+    horaSelect.innerHTML = '<option value="">Selecciona la hora...</option>';
+    TODAS_LAS_HORAS.forEach(h => {
+      const o = document.createElement('option');
+      o.value = h; o.textContent = h;
+      horaSelect.appendChild(o);
+    });
+    return;
+  }
+
+  const ahora      = new Date();
+  const hoy        = ahora.toISOString().split('T')[0];
+  const esHoy      = fechaElegida === hoy;
+  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+
+  horaSelect.innerHTML = '<option value="">Selecciona la hora...</option>';
+
+  let hayHorasDisponibles = false;
+
+  TODAS_LAS_HORAS.forEach(hora => {
+    const o = document.createElement('option');
+    o.value = hora;
+
+    if (esHoy && horaEnMinutos(hora) <= minutosAhora) {
+      // Hora ya pasada — mostrar deshabilitada
+      o.textContent = hora + ' (no disponible)';
+      o.disabled = true;
+      o.style.color = '#888';
+    } else {
+      o.textContent = hora;
+      hayHorasDisponibles = true;
+    }
+
+    horaSelect.appendChild(o);
+  });
+
+  // Si no quedan horas disponibles hoy, avisar
+  if (esHoy && !hayHorasDisponibles) {
+    horaSelect.innerHTML = '<option value="">No hay horas disponibles para hoy</option>';
+  }
 }
 
 // ══════════════════════════════════════════
@@ -30,87 +83,14 @@ for (let h = 8; h <= 20; h++) {
 // ══════════════════════════════════════════
 const fechaInput = document.getElementById('fecha');
 if (fechaInput) {
-  fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
-}
+  const hoy = new Date().toISOString().split('T')[0];
+  fechaInput.setAttribute('min', hoy);
 
-// ══════════════════════════════════════════
-//  CARGAR HORAS DISPONIBLES SEGÚN LA FECHA
-// ══════════════════════════════════════════
-const horaSelect = document.getElementById('hora');
+  // Actualizar horas cuando cambia la fecha
+  fechaInput.addEventListener('change', actualizarHorasDisponibles);
 
-async function cargarHorasDisponibles(fecha) {
-  if (!horaSelect) return;
-
-  horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-  horaSelect.disabled = true;
-
-  try {
-    const res  = await fetch(API_URL);
-    const data = await res.json();
-    const citas = data.ok ? data.citas : [];
-
-    // Solo citas del día que no estén canceladas
-    const citasDelDia = citas.filter(c => c.fecha === fecha && c.estado !== 'cancelada');
-
-    // Bloquear horas dentro de 60 min de cualquier cita existente
-    const bloqueadas = new Set();
-    citasDelDia.forEach(c => {
-      const minCita = horaAMinutos(c.hora);
-      TODAS_LAS_HORAS.forEach(h => {
-        if (Math.abs(horaAMinutos(h) - minCita) < 60) {
-          bloqueadas.add(h);
-        }
-      });
-    });
-
-    horaSelect.innerHTML = '<option value="">Selecciona la hora...</option>';
-    let hayDisponibles = false;
-
-    TODAS_LAS_HORAS.forEach(h => {
-      const option = document.createElement('option');
-      option.value = h;
-      if (bloqueadas.has(h)) {
-        option.textContent = `${h} — No disponible`;
-        option.disabled = true;
-        option.style.color = '#888';
-      } else {
-        option.textContent = h;
-        hayDisponibles = true;
-      }
-      horaSelect.appendChild(option);
-    });
-
-    if (!hayDisponibles) {
-      horaSelect.innerHTML = '<option value="">Sin horarios disponibles para este día</option>';
-    }
-
-  } catch (err) {
-    console.error('Error cargando horarios:', err);
-    // Fallback: mostrar todas las horas sin restricción
-    horaSelect.innerHTML = '<option value="">Selecciona la hora...</option>';
-    TODAS_LAS_HORAS.forEach(h => {
-      const o = document.createElement('option');
-      o.value = h; o.textContent = h;
-      horaSelect.appendChild(o);
-    });
-  } finally {
-    horaSelect.disabled = false;
-  }
-}
-
-// Escuchar cambio de fecha
-if (fechaInput && horaSelect) {
-  fechaInput.addEventListener('change', () => {
-    const fecha = fechaInput.value;
-    if (fecha) {
-      cargarHorasDisponibles(fecha);
-    } else {
-      horaSelect.innerHTML = '<option value="">Selecciona primero una fecha</option>';
-    }
-  });
-
-  // Estado inicial
-  horaSelect.innerHTML = '<option value="">Selecciona primero una fecha</option>';
+  // Inicializar horas al cargar
+  actualizarHorasDisponibles();
 }
 
 // ══════════════════════════════════════════
@@ -137,30 +117,24 @@ if (form) {
       return;
     }
 
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    if (new Date(fecha + 'T00:00:00') < hoy) {
-      alert('Por favor selecciona una fecha válida.');
-      return;
-    }
-
-    // Verificación final de disponibilidad antes de enviar
-    try {
-      const checkRes  = await fetch(API_URL);
-      const checkData = await checkRes.json();
-      const citasActuales = checkData.ok ? checkData.citas : [];
-
-      const conflicto = citasActuales.some(c => {
-        if (c.fecha !== fecha || c.estado === 'cancelada') return false;
-        return Math.abs(horaAMinutos(c.hora) - horaAMinutos(hora)) < 60;
-      });
-
-      if (conflicto) {
-        alert('Lo sentimos, ese horario acaba de ser reservado. Por favor selecciona otra hora.');
-        await cargarHorasDisponibles(fecha);
+    // Validar que la hora no haya pasado
+    const ahora    = new Date();
+    const hoy      = ahora.toISOString().split('T')[0];
+    if (fecha === hoy) {
+      const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+      if (horaEnMinutos(hora) <= minutosAhora) {
+        alert('Esa hora ya pasó. Por favor selecciona una hora disponible.');
+        actualizarHorasDisponibles();
         return;
       }
-    } catch (err) {
-      console.warn('No se pudo verificar disponibilidad en tiempo real:', err);
+    }
+
+    // Validar fecha pasada
+    const fechaElegida = new Date(fecha + 'T00:00:00');
+    ahora.setHours(0,0,0,0);
+    if (fechaElegida < ahora) {
+      alert('Por favor selecciona una fecha válida.');
+      return;
     }
 
     if (btnSubmit) { btnSubmit.textContent = 'Enviando...'; btnSubmit.disabled = true; }
@@ -172,7 +146,7 @@ if (form) {
     };
 
     try {
-      const res = await fetch(API_URL, {
+      const res  = await fetch(API_URL, {
         method: 'POST',
         body:   JSON.stringify(nuevaCita)
       });
@@ -185,8 +159,9 @@ if (form) {
           setTimeout(() => { confirmMsg.style.display = 'none'; }, 8000);
         }
         form.reset();
-        if (fechaInput) fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
-        if (horaSelect) horaSelect.innerHTML = '<option value="">Selecciona primero una fecha</option>';
+        const hoyStr = new Date().toISOString().split('T')[0];
+        if (fechaInput) fechaInput.setAttribute('min', hoyStr);
+        actualizarHorasDisponibles();
       } else {
         alert(data.mensaje || 'Error al guardar la cita. Intenta nuevamente.');
       }
