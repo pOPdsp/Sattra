@@ -351,6 +351,58 @@ if (form) {
 }
 
 // ══════════════════════════════════════════
+//  MENÚ FLOTANTE (MOBILE)
+// ══════════════════════════════════════════
+const floatingMenu = document.getElementById('floatingMenu');
+const fabButton = document.getElementById('fabButton');
+const fabItems = document.querySelectorAll('.fab-item');
+
+function showFloatingMenu() {
+  if (window.innerWidth <= 768) {
+    floatingMenu.classList.add('show');
+  }
+}
+
+function hideFloatingMenu() {
+  floatingMenu.classList.remove('show');
+}
+
+function toggleFloatingMenu(e) {
+  e.preventDefault();
+  fabButton.classList.toggle('active');
+}
+
+if (fabButton) {
+  fabButton.addEventListener('click', toggleFloatingMenu);
+}
+
+fabItems.forEach(item => {
+  item.addEventListener('click', () => {
+    fabButton.classList.remove('active');
+  });
+});
+
+// Cerrar menú al hacer click fuera
+document.addEventListener('click', (e) => {
+  if (floatingMenu && !floatingMenu.contains(e.target)) {
+    fabButton.classList.remove('active');
+  }
+});
+
+// Mostrar/ocultar menú flotante según el breakpoint
+function updateFloatingMenuVisibility() {
+  if (window.innerWidth <= 768) {
+    showFloatingMenu();
+  } else {
+    hideFloatingMenu();
+    fabButton.classList.remove('active');
+  }
+}
+
+window.addEventListener('resize', updateFloatingMenuVisibility);
+updateFloatingMenuVisibility();
+
+// ══════════════════════════════════════════
 //  MENÚ HAMBURGUESA
 // ══════════════════════════════════════════
 const hamburger = document.getElementById('hamburger');
