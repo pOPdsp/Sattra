@@ -358,6 +358,6 @@ const navLinks = document.getElementById('navLinks');
 if (hamburger && navLinks) {
   hamburger.addEventListener('click', () => navLinks.classList.toggle('active'));
 }
-document.querySelectorAll('.nav-links a').forEach(link => {
+document.querySelectorAll('.nav-item a').forEach(link => {
   link.addEventListener('click', () => { if (navLinks) navLinks.classList.remove('active'); });
 });
