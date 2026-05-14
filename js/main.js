@@ -26,49 +26,126 @@ function horaEnMinutos(horaStr) {
   return h * 60 + m;
 }
 
+function formatoFecha(date) {
+  const año = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  return `${año}-${mes}-${dia}`;
+}
+
 // ══════════════════════════════════════════
-//  CARGAR HORAS DISPONIBLES
-//  Bloquea: horas pasadas (si es hoy) +
-//           horas dentro de 60 min de una cita existente
+//  CALENDARIO
 // ══════════════════════════════════════════
-const fechaInput = document.getElementById('fecha');
-const horaSelect = document.getElementById('hora');
+let currentDate = new Date();
+let selectedDate = null;
+let selectedTime = null;
 
-async function cargarHorasDisponibles() {
-  if (!fechaInput || !horaSelect) return;
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
-  const fechaElegida = fechaInput.value;
+  const title = new Date(year, month).toLocaleDateString('es-ES', {
+    month: 'long',
+    year: 'numeric'
+  });
 
-  // Sin fecha → reset limpio
-  if (!fechaElegida) {
-    horaSelect.innerHTML = '<option value="">Selecciona primero una fecha</option>';
-    return;
+  document.getElementById('calendarTitle').textContent = title.charAt(0).toUpperCase() + title.slice(1);
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDayOfWeek = firstDay.getDay();
+
+  const calendarDaysDiv = document.getElementById('calendarDays');
+  calendarDaysDiv.innerHTML = '';
+
+  // Días del mes anterior
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
+  for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+    const day = document.createElement('div');
+    day.className = 'calendar-day other-month';
+    day.textContent = prevMonthLastDay - i;
+    calendarDaysDiv.appendChild(day);
   }
 
-  horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
-  horaSelect.disabled  = true;
+  // Días del mes actual
+  const today = new Date();
+  const todayStr = formatoFecha(today);
 
-  // ── 1. Determinar minutos actuales (para bloquear pasado si es hoy) ──
-  const ahora        = new Date();
-  const hoy          = ahora.toISOString().split('T')[0];
-  const esHoy        = fechaElegida === hoy;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const dateStr = formatoFecha(date);
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'calendar-day';
+    dayDiv.textContent = day;
+
+    // Desactivar días pasados
+    if (dateStr < todayStr) {
+      dayDiv.classList.add('disabled');
+    } else {
+      dayDiv.classList.add('available');
+      dayDiv.addEventListener('click', () => selectDate(dateStr, dayDiv));
+
+      if (dateStr === selectedDate) {
+        dayDiv.classList.add('selected');
+      }
+    }
+
+    calendarDaysDiv.appendChild(dayDiv);
+  }
+
+  // Días del próximo mes
+  const totalCells = calendarDaysDiv.children.length;
+  const remainingCells = 42 - totalCells;
+  for (let i = 1; i <= remainingCells; i++) {
+    const day = document.createElement('div');
+    day.className = 'calendar-day other-month';
+    day.textContent = i;
+    calendarDaysDiv.appendChild(day);
+  }
+}
+
+function selectDate(dateStr, dayElement) {
+  // Remover selección anterior
+  document.querySelectorAll('.calendar-day.selected').forEach(el => {
+    el.classList.remove('selected');
+  });
+
+  selectedDate = dateStr;
+  dayElement.classList.add('selected');
+  selectedTime = null;
+  cargarHorasDisponibles();
+}
+
+// ══════════════════════════════════════════
+//  CARGAR HORAS DISPONIBLES
+// ══════════════════════════════════════════
+async function cargarHorasDisponibles() {
+  if (!selectedDate) return;
+
+  const timeSlots = document.getElementById('timeSlots');
+  timeSlots.innerHTML = '<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: rgba(255,255,255,0.5);">Cargando horarios...</div>';
+
+  const ahora = new Date();
+  const hoy = formatoFecha(ahora);
+  const esHoy = selectedDate === hoy;
   const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
 
-  // ── 2. Obtener citas reservadas de la API ──
+  // Obtener citas reservadas
   let citasDelDia = [];
   try {
-    const res  = await fetch(API_URL);
+    const res = await fetch(API_URL);
     const data = await res.json();
     if (data.ok) {
       citasDelDia = data.citas.filter(
-        c => c.fecha === fechaElegida && c.estado !== 'cancelada'
+        c => c.fecha === selectedDate && c.estado !== 'cancelada'
       );
     }
   } catch (e) {
-    console.warn('No se pudo consultar la API, se muestran horas sin filtro de reservas.', e);
+    console.warn('No se pudo consultar la API', e);
   }
 
-  // ── 3. Construir set de horas bloqueadas por citas (±60 min) ──
+  // Construir set de horas bloqueadas
   const bloqueadasPorCita = new Set();
   citasDelDia.forEach(c => {
     const minCita = horaEnMinutos(c.hora);
@@ -79,103 +156,135 @@ async function cargarHorasDisponibles() {
     });
   });
 
-  // ── 4. Construir el select ──
-  horaSelect.innerHTML = '<option value="">Selecciona la hora...</option>';
-  let hayDisponibles = false;
-
+  // Renderizar horas
+  timeSlots.innerHTML = '';
   TODAS_LAS_HORAS.forEach(hora => {
-    const minHora      = horaEnMinutos(hora);
-    const yaPaso       = esHoy && minHora <= minutosAhora;
-    const estaOcupada  = bloqueadasPorCita.has(hora);
-    const bloqueada    = yaPaso || estaOcupada;
+    const minHora = horaEnMinutos(hora);
+    const yaPaso = esHoy && minHora <= minutosAhora;
+    const estaOcupada = bloqueadasPorCita.has(hora);
+    const bloqueada = yaPaso || estaOcupada;
 
-    const option = document.createElement('option');
-    option.value = hora;
+    const slot = document.createElement('button');
+    slot.type = 'button';
+    slot.className = 'time-slot';
+    slot.textContent = hora;
 
     if (bloqueada) {
-      option.textContent = `${hora} — ${yaPaso ? 'hora pasada' : 'no disponible'}`;
-      option.disabled    = true;
-      option.style.color = '#888';
+      slot.classList.add('disabled');
+      slot.disabled = true;
     } else {
-      option.textContent = hora;
-      hayDisponibles     = true;
+      if (hora === selectedTime) {
+        slot.classList.add('selected');
+      }
+      slot.addEventListener('click', (e) => {
+        e.preventDefault();
+        selectTime(hora, slot);
+      });
     }
 
-    horaSelect.appendChild(option);
+    timeSlots.appendChild(slot);
+  });
+}
+
+function selectTime(time, element) {
+  document.querySelectorAll('.time-slot.selected').forEach(el => {
+    el.classList.remove('selected');
   });
 
-  if (!hayDisponibles) {
-    horaSelect.innerHTML = '<option value="">Sin horarios disponibles para este día</option>';
-  }
-
-  horaSelect.disabled = false;
+  selectedTime = time;
+  element.classList.add('selected');
 }
 
 // ══════════════════════════════════════════
-//  FECHA MÍNIMA + LISTENER
+//  INICIALIZACIÓN DEL CALENDARIO
 // ══════════════════════════════════════════
-if (fechaInput) {
-  fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
-  fechaInput.addEventListener('change', cargarHorasDisponibles);
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+const resetBtn = document.getElementById('resetBtn');
+
+if (prevMonthBtn) {
+  prevMonthBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  });
 }
 
-// Estado inicial del selector de hora
-if (horaSelect) {
-  horaSelect.innerHTML = '<option value="">Selecciona primero una fecha</option>';
+if (nextMonthBtn) {
+  nextMonthBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  });
 }
+
+if (resetBtn) {
+  resetBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('bookingForm').reset();
+    selectedDate = null;
+    selectedTime = null;
+    document.querySelectorAll('.calendar-day.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    document.querySelectorAll('.time-slot.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    document.getElementById('timeSlots').innerHTML = '';
+  });
+}
+
+renderCalendar();
 
 // ══════════════════════════════════════════
 //  FORMULARIO DE CITAS
 // ══════════════════════════════════════════
-const form       = document.getElementById('bookingForm');
+const form = document.getElementById('bookingForm');
 const confirmMsg = document.getElementById('confirmMsg');
-const btnSubmit  = document.querySelector('.btn-submit');
+const btnSubmit = document.querySelector('.btn-submit');
 
 if (form) {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const nombre   = (document.getElementById('nombre')?.value   || '').trim();
+    const nombre = (document.getElementById('nombre')?.value || '').trim();
     const telefono = (document.getElementById('telefono')?.value || '').trim();
-    const email    = (document.getElementById('email')?.value    || '').trim();
-    const servicio = document.getElementById('servicio')?.value  || '';
-    const fecha    = document.getElementById('fecha')?.value     || '';
-    const hora     = document.getElementById('hora')?.value      || '';
-    const notas    = (document.getElementById('notas')?.value    || '').trim();
+    const email = (document.getElementById('email')?.value || '').trim();
+    const servicio = document.getElementById('servicio')?.value || '';
+    const notas = (document.getElementById('notas')?.value || '').trim();
 
-    if (!nombre || !telefono || !email || !servicio || !fecha || !hora) {
-  alert('Por favor completa todos los campos obligatorios, incluyendo el correo electrónico.');
-  return;
-}
+    if (!nombre || !telefono || !email || !servicio || !selectedDate || !selectedTime) {
+      alert('Por favor completa todos los campos obligatorios, incluyendo la fecha y hora.');
+      return;
+    }
 
-    // ── Validar que la hora no haya pasado (si es hoy) ──
+    // Validar que la hora no haya pasado
     const ahora = new Date();
-    const hoy   = ahora.toISOString().split('T')[0];
-    if (fecha === hoy) {
+    const hoy = formatoFecha(ahora);
+    if (selectedDate === hoy) {
       const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
-      if (horaEnMinutos(hora) <= minutosAhora) {
+      if (horaEnMinutos(selectedTime) <= minutosAhora) {
         alert('Esa hora ya pasó. Por favor selecciona otra hora.');
-        cargarHorasDisponibles();
         return;
       }
     }
 
-    // ── Validar fecha pasada ──
-    const fechaObj = new Date(fecha + 'T00:00:00');
-    const hoyObj   = new Date(hoy  + 'T00:00:00');
-    if (fechaObj < hoyObj) {
+    // Validar fecha pasada
+    const selectedDateObj = new Date(selectedDate + 'T00:00:00');
+    const hoyObj = new Date(hoy + 'T00:00:00');
+    if (selectedDateObj < hoyObj) {
       alert('Por favor selecciona una fecha válida.');
       return;
     }
 
-    // ── Verificación final en tiempo real (alguien pudo reservar mientras tanto) ──
+    // Verificación final
     try {
-      const checkRes  = await fetch(API_URL);
+      const checkRes = await fetch(API_URL);
       const checkData = await checkRes.json();
       if (checkData.ok) {
         const conflicto = checkData.citas.some(c => {
-          if (c.fecha !== fecha || c.estado === 'cancelada') return false;
-          return Math.abs(horaEnMinutos(c.hora) - horaEnMinutos(hora)) < 60;
+          if (c.fecha !== selectedDate || c.estado === 'cancelada') return false;
+          return Math.abs(horaEnMinutos(c.hora) - horaEnMinutos(selectedTime)) < 60;
         });
         if (conflicto) {
           alert('Lo sentimos, ese horario acaba de ser reservado. Por favor selecciona otra hora.');
@@ -184,19 +293,28 @@ if (form) {
         }
       }
     } catch (err) {
-      console.warn('No se pudo verificar disponibilidad en tiempo real:', err);
+      console.warn('No se pudo verificar disponibilidad:', err);
     }
 
-    if (btnSubmit) { btnSubmit.textContent = 'Enviando...'; btnSubmit.disabled = true; }
+    if (btnSubmit) {
+      btnSubmit.textContent = 'Enviando...';
+      btnSubmit.disabled = true;
+    }
 
     const nuevaCita = {
       action: 'crearCita',
-      id:     generarId(),
-      nombre, telefono, email, servicio, fecha, hora, notas
+      id: generarId(),
+      nombre, telefono, email, servicio,
+      fecha: selectedDate,
+      hora: selectedTime,
+      notas
     };
 
     try {
-      const res  = await fetch(API_URL, { method: 'POST', body: JSON.stringify(nuevaCita) });
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify(nuevaCita)
+      });
       const data = await res.json();
 
       if (data.ok) {
@@ -206,8 +324,17 @@ if (form) {
           setTimeout(() => { confirmMsg.style.display = 'none'; }, 8000);
         }
         form.reset();
-        if (fechaInput) fechaInput.setAttribute('min', new Date().toISOString().split('T')[0]);
-        if (horaSelect) horaSelect.innerHTML = '<option value="">Selecciona primero una fecha</option>';
+        selectedDate = null;
+        selectedTime = null;
+        document.querySelectorAll('.calendar-day.selected').forEach(el => {
+          el.classList.remove('selected');
+        });
+        document.querySelectorAll('.time-slot.selected').forEach(el => {
+          el.classList.remove('selected');
+        });
+        document.getElementById('timeSlots').innerHTML = '';
+        currentDate = new Date();
+        renderCalendar();
       } else {
         alert(data.mensaje || 'Error al guardar la cita. Intenta nuevamente.');
       }
@@ -215,7 +342,10 @@ if (form) {
       console.error(err);
       alert('Error de conexión. Verifica tu internet e intenta nuevamente.');
     } finally {
-      if (btnSubmit) { btnSubmit.textContent = 'Confirmar Cita'; btnSubmit.disabled = false; }
+      if (btnSubmit) {
+        btnSubmit.textContent = 'Confirmar Cita';
+        btnSubmit.disabled = false;
+      }
     }
   });
 }
@@ -224,7 +354,7 @@ if (form) {
 //  MENÚ HAMBURGUESA
 // ══════════════════════════════════════════
 const hamburger = document.getElementById('hamburger');
-const navLinks  = document.getElementById('navLinks');
+const navLinks = document.getElementById('navLinks');
 if (hamburger && navLinks) {
   hamburger.addEventListener('click', () => navLinks.classList.toggle('active'));
 }

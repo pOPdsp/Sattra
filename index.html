@@ -391,6 +391,7 @@
       <div class="divider-gold centered"></div>
 
       <form class="booking-form" id="bookingForm">
+        <!-- DATOS PERSONALES -->
         <div class="form-row">
           <div class="form-group">
             <label for="nombre">Nombre completo</label>
@@ -401,10 +402,12 @@
             <input type="tel" id="telefono" placeholder="8672-7070" required />
           </div>
         </div>
+
         <div class="form-group">
-  <label for="email">Correo electrónico</label>
-  <input type="email" id="email" placeholder="correo@ejemplo.com" required />
-</div>
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" placeholder="correo@ejemplo.com" required />
+        </div>
+
         <div class="form-group">
           <label for="servicio">Servicio</label>
           <select id="servicio" required>
@@ -424,23 +427,38 @@
             <option>Limpieza Facial</option>
           </select>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="fecha">Fecha</label>
-            <input type="date" id="fecha" required />
+
+        <!-- CALENDARIO Y HORAS -->
+        <div class="calendar-scheduler">
+          <div class="scheduler-calendar">
+            <div class="calendar-header">
+              <button type="button" id="prevMonth" class="calendar-nav">←</button>
+              <h3 id="calendarTitle"></h3>
+              <button type="button" id="nextMonth" class="calendar-nav">→</button>
+            </div>
+            <div class="calendar-weekdays">
+              <div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sa</div>
+            </div>
+            <div class="calendar-days" id="calendarDays"></div>
           </div>
-          <div class="form-group">
-            <label for="hora">Hora</label>
-            <select id="hora" required>
-              <option value="">Selecciona primero una fecha</option>
-            </select>
+
+          <div class="scheduler-times">
+            <p class="times-label">Selecciona una hora</p>
+            <div class="time-slots" id="timeSlots"></div>
           </div>
         </div>
+
+        <!-- NOTAS -->
         <div class="form-group">
           <label for="notas">Notas adicionales (opcional)</label>
           <textarea id="notas" rows="3" placeholder="¿Tienes alguna consulta o indicación especial?"></textarea>
         </div>
-        <button type="submit" class="btn-submit">Confirmar Cita</button>
+
+        <!-- BOTONES -->
+        <div class="scheduler-buttons">
+          <button type="button" class="btn-reset" id="resetBtn">Reiniciar</button>
+          <button type="submit" class="btn-submit" id="submitBtn">Confirmar Cita</button>
+        </div>
       </form>
 
       <div class="confirm-msg" id="confirmMsg">
