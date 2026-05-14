@@ -357,25 +357,23 @@ const floatingMenu = document.getElementById('floatingMenu');
 const fabButton = document.getElementById('fabButton');
 const fabItems = document.querySelectorAll('.fab-item');
 
-function toggleFloatingMenu(e) {
-  e.preventDefault();
-  fabButton.classList.toggle('active');
-}
-
 if (fabButton) {
-  fabButton.addEventListener('click', toggleFloatingMenu);
+  fabButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    floatingMenu.classList.toggle('open');
+  });
 }
 
 fabItems.forEach(item => {
   item.addEventListener('click', () => {
-    fabButton.classList.remove('active');
+    floatingMenu.classList.remove('open');
   });
 });
 
 // Cerrar menú al hacer click fuera
 document.addEventListener('click', (e) => {
   if (floatingMenu && !floatingMenu.contains(e.target)) {
-    fabButton.classList.remove('active');
+    floatingMenu.classList.remove('open');
   }
 });
 
